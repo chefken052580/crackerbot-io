@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CrackerBot Cosmic Hub</title>
+    <link rel="stylesheet" href="/crackerbot-styles.css">
+        
+    <!-- Load Socket.io from CDN -->
+    <script src="./socket.io.min.js"></script>
+    
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script>
+console.log("[DEBUG] Page loaded, checking socket...");
+setTimeout(() => {
+    console.log("[DEBUG] Socket status:", window.socket?.connected);
+    console.log("[DEBUG] Backend URL:", window.BACKEND_URL);
+    if (window.socket) {
+        window.socket.onAny((event, ...args) => {
+            console.log("[FRONTEND] Socket event:", event, args);
+        });
+    }
+}, 2000);
+</script>
+</head>
+<body class="cosmic-theme">
+    <!-- Project Type Selection Modal -->
+    <div class="modal-overlay" id="project-modal-overlay"></div>
+    <div class="project-type-modal" id="project-type-modal">
+        <button class="modal-close-btn" onclick="closeProjectModal()">×</button>
+        <h2>🚀 Choose Your Project Type</h2>
+        <div class="project-types-grid" id="project-types-grid">
+            <!-- Will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <div class="app-container">
+        <!-- Token Scanner -->
+        <div class="token-scanner-panel">
+            <div class="scanner-header">
+                <h3>📡 Token Scanner</h3>
+                <button class="refresh-btn" onclick="refreshTokens()">Refresh</button>
+            </div>
+            <div id="token-list" class="token-list">
+                <div class="token-item">SOL $98.45 ↑ 5%</div>
+                <div class="token-item">BONK $0.000024 ↑ 12%</div>
+                <div class="token-item">JUP $1.23 ↓ 2%</div>
+            </div>
+        </div>
+
+        <!-- Main Chat -->
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="app-title">
+                    <span class="bot-icon">🚀</span>
+                    <h1>CrackerBot - <span id="user-name">Guest</span></h1>
+                </div>
+                <div class="header-buttons">
+                    <button class="warp-btn" onclick="warpReconnect()">🌀 Warp</button>
+                </div>
+            </div>
+
+            <div id="chat-messages" class="chat-messages"></div>
+
+            <!-- Task Status -->
+            <div id="task-status-section" class="task-status-section" style="display: none;">
+                <h3>Building: <span id="task-name"></span></h3>
+                <p>Type: <span id="task-type"></span></p>
+                <p>Status: <span id="task-status"></span></p>
+                <div class="progress-container" style="display: none;">
+                    <div id="progress-bar" class="progress-bar"></div>
+                    <span id="progress-text" class="progress-text">0%</span>
+                </div>
+            </div>
+
+            <!-- Choice Bubbles -->
+            <div id="choice-bubbles" class="choice-bubbles"></div>
+
+            <!-- Input Area -->
+            <div class="input-area">
+                <label for="message-input" class="sr-only">Message</label>
+                <input type="text" id="message-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter')sendMessage()">
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+
+        <!-- Wallets Panel -->
+        <div class="wallets-panel">
+            <div class="wallet-header">
+                <h3>💼 Wallets</h3>
+            </div>
+            <div id="wallet-list">
+                <div class="wallet-item">Wallet 1: $5,432</div>
+                <div class="wallet-item">Wallet 2: $10,234</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =================================== -->
+    <!-- SCRIPTS IN CORRECT ORDER -->
+    <!-- =================================== -->  
+    <!-- 1. Core Application Scripts -->
+    <script src="/crackerbot-websocket.js"></script>
+    <script src="/crackerbot-main.js"></script>
+    <script src="/crackerbot-user-persistence.js"></script>
+    
+    <!-- 2. UI Components -->
+    <script src="/crackerbot-tokens.js"></script>
+    <script src="/crackerbot-tracker.js"></script>
+    
+    <!-- 3. Project System -->
+    <script src="/crackerbot-projects.js"></script>
+    <script src="/crackerbot-all-projects.js"></script>
+    <script src="/crackerbot-project-manager.js"></script>
+
+    <!-- 4. AI Builder System -->
+    <script src="/crackerbot-ai-builder.js"></script>
+    <script src="/crackerbot-build.js"></script>
+    <script src="/test-build.js"></script>
+    <script src="/build-trace.js"></script>
+    
+    <!-- 5. Individual Builders -->
+    <script src="/crackerbot-web-builder.js"></script>
+    <script src="/crackerbot-framework-builder.js"></script>
+    <script src="/crackerbot-game-builder.js"></script>
+    <script src="/crackerbot-bot-builder.js"></script>
+    <script src="/crackerbot-web3-builder.js"></script>
+    <script src="/crackerbot-backend-builder.js"></script>
+    
+    <!-- 6. Live Streaming Preview System -->
+    <script src="/crackerbot-live-streaming-preview.js"></script>
+    <script src="/debug-socket-events.js"></script>
+    <script src="/check-backend-connection.js"></script>
+    
+    <!-- 7. Post-Build System -->
+    <script src="/crackerbot-post-build.js"></script>
+    
+    <!-- 8. AI Editor -->
+    <script src="/crackerbot-ai-editor.js"></script>
+    <script src="/crackerbot-ai-connector.js"></script>
+    <script src="/crackerbot-split-editor.js"></script>
+    
+    <!-- 9. Fix for Edit Button -->
+    <script src="/fix-edit-button.js"></script>
+    <script src="/fix-preview-button.js"></script>
+    
+    <!-- 10. Theme System -->
+    <script src="/crackerbot-theme-system.js"></script>
+
+    <!-- 11. Welcome System -->
+    <script src="/welcome-name.js"></script>
+
+<script>
+// Final fix to ensure View Projects works
+setTimeout(() => {
+    // Override handleOption to ensure View Projects works
+    const originalHandleOption = window.handleOption;
+    window.handleOption = function(option) {
+        console.log('[Final Fix] handleOption:', option);
+        
+        if (option.includes("View Projects") || option.includes("📁")) {
+            if (window.showProjectsManager) {
+                window.showProjectsManager();
+            } else {
+                // Fallback
+                alert('Projects: ' + JSON.parse(localStorage.getItem("crackerBotProjects") || "[]").length);
+            }
+        } else if (originalHandleOption) {
+            originalHandleOption(option);
+        }
+    };
+    
+    console.log('[Final Fix] View Projects ready');
+}, 2000);
+</script>
+
+<script>
+// Block all automatic messages during warp
+(function() {
+    const originalAddMessage = window.addMessage;
+    window.addMessage = function(sender, text, type) {
+        // Block these messages if warping
+        if (window.IS_WARPING || window.WARP_IN_PROGRESS) {
+            const blockedMessages = [
+                'Frontend connected',
+                'get_projects',
+                'Welcome back',
+                'Welcome to CrackerBot',
+                'I can help you build'
+            ];
+            
+            for (let blocked of blockedMessages) {
+                if (text && text.includes(blocked)) {
+                    console.log('[Block] Skipping message during warp:', text.substring(0, 50));
+                    return;
+                }
+            }
+        }
+        
+        // Allow the message
+        if (originalAddMessage) {
+            originalAddMessage(sender, text, type);
+        }
+    };
+})();
+</script>
+
+<script>
+// CORRECT FLOW: Build → AI Live Editor → User Closes → Post Build Options
+setTimeout(() => {
+    console.log('[Flow] Setting up correct build flow...');
+    
+    // Flag to track if we should show post-build options after close
+    window.SHOW_POST_BUILD_AFTER_CLOSE = false;
+    
+    // Override completeBuilding to open AI Live Editor (NO post-build options yet)
+    window.completeBuilding = function() {
+        console.log('[Flow] Build completed! Opening AI Live Editor...');
+        
+        if (!window.currentTask.files || Object.keys(window.currentTask.files).length === 0) {
+            console.warn('[Flow] No files generated, creating fallback');
+            window.currentTask.files = {
+<script>
+console.log("[DEBUG] Page loaded, checking socket...");
+setTimeout(() => {
+    console.log("[DEBUG] Socket status:", window.socket?.connected);
+    console.log("[DEBUG] Backend URL:", window.BACKEND_URL);
+    if (window.socket) {
+        window.socket.onAny((event, ...args) => {
+            console.log("[FRONTEND] Socket event:", event, args);
+        });
+    }
+}, 2000);
+</script>
+                'index.html': `<!DOCTYPE html><html><head><title>${window.currentTask.projectName}</title></head><body><h1>${window.currentTask.projectName}</h1></body></html>`,
+                'style.css': 'body { font-family: Arial, sans-serif; }',
+                'script.js': `console.log("${window.currentTask.projectName} loaded");`
+            };
+        }
+        
+        window.currentTask.status = 'Complete';
+        window.currentTask.completed = true;
+        window.currentTask.completedAt = new Date().toISOString();
+        
+        // Save to storage
+        const projects = JSON.parse(localStorage.getItem('crackerBotProjects') || '[]');
+        projects.push({...window.currentTask});
+        localStorage.setItem('crackerBotProjects', JSON.stringify(projects));
+        
+        // Hide progress
+        setTimeout(() => {
+            const taskSection = document.getElementById('task-status-section');
+            if (taskSection) taskSection.style.display = 'none';
+            
+            const progressContainer = document.querySelector('.progress-container');
+            if (progressContainer) progressContainer.style.display = 'none';
+        }, 1000);
+        
+        // Show completion message
+        if (window.addMessage) {
+            window.addMessage('CrackerBot', 
+                `✅ "${window.currentTask.projectName}" is complete! Opening AI Editor...`, 
+                'bot'
+            );
+        }
+        
+        // Set flag to show post-build options when AI editor closes
+        window.SHOW_POST_BUILD_AFTER_CLOSE = true;
+        
+        // Open AI Live Editor
+        setTimeout(() => {
+            if (window.livePreview && window.livePreview.autoOpen) {
+                console.log('[Flow] Opening AI Live Editor...');
+                window.livePreview.autoOpen({
+                    taskId: Date.now(),
+                    projectName: window.currentTask.projectName || 'Generated Project',
+                    projectType: window.currentTask.projectType || 'web-app',
+                    features: window.currentTask.features || 'AI Generated Features',
+                    frontendId: 'auto-build-editor'
+                });
+            } else {
+                console.error('[Flow] Live preview not available, showing post-build options directly');
+                if (window.showPostBuildOptions) {
+                    window.showPostBuildOptions();
+                }
+            }
+        }, 1500);
+    };
+    
+    // Override the live preview close function to show post-build options
+    setTimeout(() => {
+        if (window.livePreview) {
+            const originalClose = window.livePreview.close;
+            window.livePreview.close = function() {
+                console.log('[Flow] AI Live Editor closing...');
+                
+                // Call original close function
+                if (originalClose) {
+                    originalClose.call(this);
+                }
+                
+                // Show post-build options if we came from a build
+                if (window.SHOW_POST_BUILD_AFTER_CLOSE) {
+                    console.log('[Flow] Showing post-build options after AI editor close...');
+                    window.SHOW_POST_BUILD_AFTER_CLOSE = false;
+                    
+                    setTimeout(() => {
+                        if (window.showPostBuildOptions) {
+                            window.showPostBuildOptions();
+                        }
+                    }, 500);
+                }
+            };
+            
+            console.log('[Flow] Live preview close function overridden');
+        } else {
+            console.warn('[Flow] Live preview not available for close override');
+        }
+    }, 6000);
+    
+    console.log('[Flow] Correct build flow configured!');
+}, 5000);
+</script>
+</body>
+</html>
+
+<script>
+// ULTIMATE DEBUG AND FIX SCRIPT
+console.log("=== CRACKERBOT FLOW DEBUG ===");
+
+// Wait for everything to load
+setTimeout(() => {
+    console.log("🔍 Checking what's available...");
+    console.log("window.livePreview:", !!window.livePreview, typeof window.livePreview);
+    console.log("window.livePreview.autoOpen:", typeof window.livePreview?.autoOpen);
+    console.log("window.completeBuilding:", typeof window.completeBuilding);
+    console.log("window.showPostBuildOptions:", typeof window.showPostBuildOptions);
+    console.log("window.openProjectPreview:", typeof window.openProjectPreview);
+    
+    // FORCE OVERRIDE COMPLETEBUILDING
+    const originalCompleteBuilding = window.completeBuilding;
+    window.completeBuilding = function() {
+        console.log("🚀 [OVERRIDE] completeBuilding called!");
+        
+        // Do the normal completion stuff
+        if (!window.currentTask.files || Object.keys(window.currentTask.files).length === 0) {
+            window.currentTask.files = {
+<script>
+console.log("[DEBUG] Page loaded, checking socket...");
+setTimeout(() => {
+    console.log("[DEBUG] Socket status:", window.socket?.connected);
+    console.log("[DEBUG] Backend URL:", window.BACKEND_URL);
+    if (window.socket) {
+        window.socket.onAny((event, ...args) => {
+            console.log("[FRONTEND] Socket event:", event, args);
+        });
+    }
+}, 2000);
+</script>
+                'index.html': `<!DOCTYPE html><html><head><title>${window.currentTask.projectName}</title></head><body><h1>${window.currentTask.projectName}</h1><p>A cool app all about the topic!</p></body></html>`,
+                'styles.css': 'body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; }',
+                'script.js': `console.log("${window.currentTask.projectName} loaded");`,
+                'README.md': `# ${window.currentTask.projectName}\n\nGenerated by CrackerBot AI.`
+            };
+        }
+        
+        window.currentTask.status = 'Complete';
+        window.currentTask.completed = true;
+        window.currentTask.completedAt = new Date().toISOString();
+        
+        // Save to storage
+        const projects = JSON.parse(localStorage.getItem('crackerBotProjects') || '[]');
+        projects.push({...window.currentTask});
+        localStorage.setItem('crackerBotProjects', JSON.stringify(projects));
+        
+        // Hide progress UI
+        setTimeout(() => {
+            const taskSection = document.getElementById('task-status-section');
+            if (taskSection) taskSection.style.display = 'none';
+            const progressContainer = document.querySelector('.progress-container');
+            if (progressContainer) progressContainer.style.display = 'none';
+        }, 1000);
+        
+        // Show completion message
+        if (window.addMessage) {
+            window.addMessage('CrackerBot', 
+                `✅ "${window.currentTask.projectName}" is complete! ${Object.keys(window.currentTask.files).length} files generated.`, 
+                'bot'
+            );
+        }
+        
+        // TRY TO OPEN LIVE PREVIEW
+        console.log("🎯 [OVERRIDE] Attempting to open live preview...");
+        
+        setTimeout(() => {
+            if (window.livePreview && typeof window.livePreview.autoOpen === 'function') {
+                console.log("✅ [OVERRIDE] Opening live preview!");
+                try {
+                    window.livePreview.autoOpen({
+                        taskId: Date.now(),
+                        projectName: window.currentTask.projectName || 'Generated Project',
+                        projectType: window.currentTask.projectType || 'web-app',
+                        features: window.currentTask.features || 'AI Generated Features',
+                        frontendId: 'debug-auto-open'
+                    });
+                } catch (error) {
+                    console.error("❌ [OVERRIDE] Live preview failed:", error);
+                    // Fallback to post-build options
+                    if (window.showPostBuildOptions) {
+                        window.showPostBuildOptions();
+                    }
+                }
+            } else {
+                console.error("❌ [OVERRIDE] Live preview not available!");
+                console.log("Available methods:", Object.keys(window.livePreview || {}));
+                // Fallback to post-build options
+                if (window.showPostBuildOptions) {
+                    window.showPostBuildOptions();
+                }
+            }
+        }, 2000);
+    };
+    
+    // FORCE FIX PREVIEW BUTTON
+    window.openProjectPreview = function() {
+        console.log("🔧 [OVERRIDE] openProjectPreview called!");
+        
+        if (window.livePreview && window.livePreview.autoOpen) {
+            console.log("🎯 [OVERRIDE] Using livePreview.autoOpen for button...");
+            window.livePreview.autoOpen({
+                taskId: Date.now(),
+                projectName: window.currentTask?.projectName || 'Current Project',
+                projectType: window.currentTask?.projectType || 'web-app',
+                features: window.currentTask?.features || 'Project features',
+                frontendId: 'button-preview'
+            });
+        } else {
+            console.error("❌ [OVERRIDE] Live preview not available for button!");
+            alert("Live preview system not loaded yet. Please try again in a moment.");
+        }
+    };
+    
+    // ALSO OVERRIDE OTHER PREVIEW FUNCTIONS
+    window.showPreviewWithAI = function(task) {
+        console.log("🔧 [OVERRIDE] showPreviewWithAI called!");
+        window.openProjectPreview();
+    };
+    
+    window.editWithAI = function() {
+        console.log("🔧 [OVERRIDE] editWithAI called!");
+        window.openProjectPreview();
+    };
+    
+    console.log("✅ All overrides applied!");
+    
+}, 8000); // Wait 8 seconds for everything to load
+
+console.log("=== DEBUG SCRIPT READY ===");
+</script>

@@ -1,0 +1,265 @@
+// CrackerBot Main Application
+console.log("🌌 CrackerBot Initializing...");
+
+// Global variables
+window.socket = null;
+window.isConnected = false;
+
+// FIXED: Don't auto-load name if we're warping or just warped
+if (!window.isWarping && !window.justWarped) {
+    window.userName = localStorage.getItem("crackerBotUserName") || "";
+} else {
+    window.userName = ""; // Empty during warp
+}
+
+window.currentTask = null;
+window.taskPending = null;
+window.messageHistory = [];
+window.buildInterval = null;
+window.currentTheme = "matrix";
+
+// Initialize Socket.IO connection
+function initializeSocket() {
+    if (typeof io !== "undefined") {
+        // FIX: Get backend URL properly
+        let backendUrl = null;
+        const hostname = window.location.hostname;
+        
+        // Check for saved backend URL first
+        const savedBackendUrl = localStorage.getItem('crackerbot_backend_url');
+        
+        if (savedBackendUrl) {
+            backendUrl = savedBackendUrl;
+            console.log("[Main] Using saved backend URL:", backendUrl);
+        } else if (hostname.includes('ngrok.io')) {
+            // On ngrok but no backend URL configured
+            console.error("[Main] On ngrok but no backend URL configured!");
+            if (window.addMessage) {
+                window.addMessage("System", "⚠️ Please configure backend URL with: window.setBackend('https://YOUR-BACKEND.ngrok.app')", "error");
+            }
+            return;
+        } else if (hostname === 'localhost' || hostname === '127.0.0.1') {
+            // Local development
+            backendUrl = 'https://crackerbot.io';
+        } else {
+            // Unknown environment
+            backendUrl = `${window.location.protocol}//${hostname}`;
+        }
+        
+        // Store globally
+        window.BACKEND_URL = backendUrl;
+        
+        // FIXED: Connect to backend, not frontend
+        socket = io(backendUrl, {
+            transports: ["websocket", "polling"],
+            reconnection: true,
+            reconnectionAttempts: 5,
+            reconnectionDelay: 1000
+        });
+        
+        // Make globally available
+        window.socket = socket;
+        window.socketConnection = socket;
+
+        socket.on("connect", () => {
+            console.log("Connected to backend:", backendUrl);
+            isConnected = true;
+            window.isConnected = true;
+            updateStatus("connected");
+            
+            // FIXED: Don't send old username if we're warping
+            if (userName && !window.isWarping && !window.justWarped) {
+                socket.emit("set_username", { username: userName });
+            }
+        });
+
+        socket.on("disconnect", () => {
+            console.log("Disconnected from backend");
+            isConnected = false;
+            window.isConnected = false;
+            updateStatus("disconnected");
+        });
+
+        socket.on("message", (data) => {
+            if (data.from !== "You") {
+                addMessage(data.from || "CrackerBot", data.text, "bot");
+            }
+        });
+        
+        // Add AI event handlers
+        socket.on("project_generated", (data) => {
+            console.log("[Main] Project generated:", data);
+            if (data && data.files) {
+                if (window.currentTask) {
+                    window.currentTask.files = data.files;
+                }
+                if (window.completeBuild) {
+                    window.completeBuild();
+                }
+                if (window.addMessage) {
+                    window.addMessage("AI", "✅ Project generated successfully!", "bot");
+                }
+            }
+        });
+        
+        socket.on("code_modified", (data) => {
+            console.log("[Main] Code modified:", data);
+            if (data && data.code && window.currentTask && window.currentTask.files) {
+                const filename = data.filename || window.currentEditFile;
+                if (filename) {
+                    window.currentTask.files[filename] = data.code;
+                    
+                    const editor = document.getElementById('code-editor');
+                    if (editor && window.currentEditFile === filename) {
+                        editor.value = data.code;
+                    }
+                }
+                if (window.addMessage) {
+                    window.addMessage("AI", "✅ Code updated!", "bot");
+                }
+            }
+        });
+    }
+}
+
+// Make initializeSocket globally available for reconnection after warp
+window.initializeSocket = initializeSocket;
+
+// Add message to chat
+function addMessage(from, text, type, skipHistory) {
+    const messagesDiv = document.getElementById("chat-messages") || document.getElementById("messages");
+    if (!messagesDiv) return;
+    
+    const messageDiv = document.createElement("div");
+    messageDiv.className = `message ${type}-message`;
+    messageDiv.innerHTML = `<strong>${from}:</strong> ${text}`;
+    messagesDiv.appendChild(messageDiv);
+    
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    
+    if (!skipHistory) {
+        messageHistory.push({ from, text, type, time: new Date().toLocaleTimeString() });
+    }
+}
+
+// Make addMessage globally available
+window.addMessage = addMessage;
+
+// Send message
+function sendMessage() {
+    const input = document.getElementById("message-input") || document.getElementById("input");
+    const text = input.value.trim();
+    if (!text) return;
+
+    addMessage("You", text, "user");
+    input.value = "";
+
+    if (text.startsWith("/")) {
+        processCommand(text);
+        return;
+    }
+
+    // Handle task pending responses
+    if (taskPending) {
+        if (taskPending.step === "name") {
+            userName = text;
+            localStorage.setItem("crackerBotUserName", text);
+            updateUserName();
+            setTaskPending(null);
+            /* showMainChoice() disabled */;
+        } else if (taskPending.step === "project-name") {
+            currentTask.projectName = text;
+            updateTaskStatus();
+            setTaskPending(null);
+            showProjectTypes();
+        } else if (taskPending.step === "features") {
+            currentTask.features = text;
+            updateTaskStatus();
+            setTaskPending(null);
+            // Call enhanced startBuilding that will try AI first
+            startBuilding();
+        }
+    }
+
+    if (socket && isConnected) {
+        socket.emit("message", {
+            text: text,
+            type: "message",
+            frontendId: socket.id,
+            user: userName
+        });
+    }
+}
+
+// Make sendMessage globally available
+window.sendMessage = sendMessage;
+
+// Process commands
+function processCommand(command) {
+    const cmd = command.toLowerCase();
+    
+    if (cmd === "/create" || cmd === "/build") {
+        currentTask = { mode: "building" };
+        promptProjectName();
+    } else if (cmd === "/projects") {
+        if (window.showProjectsManager) {
+            window.showProjectsManager();
+        }
+    } else if (cmd === "/clear") {
+        const messagesDiv = document.getElementById("chat-messages") || document.getElementById("messages");
+        if (messagesDiv) messagesDiv.innerHTML = "";
+        messageHistory = [];
+    } else if (cmd === "/help" || cmd === "/guide") {
+        showHelp();
+    } else if (cmd === "/warp_reconnect") {
+        warpReconnect();
+    } else {
+        addMessage("System", `Unknown command: ${command}`, "system");
+    }
+}
+
+// Handle key press
+function handleKeyPress(event) {
+    if (event.key === "Enter") {
+        sendMessage();
+    }
+}
+
+// Show main choice
+function showMainChoice() { // Fixed
+    addMessage("CrackerBot", "🌟 What would you like to do?", "bot");
+    setTaskPending({
+        question: "Choose your cosmic path:",
+        options: ["Chat", "Build-Something-Epic", "View Projects"],
+        step: "main-choice"
+    });
+}
+
+// Prompt for project name
+function promptProjectName() {
+    addMessage("CrackerBot", "🚀 Let's build something epic! What shall we name your project?", "bot");
+    setTaskPending({
+        question: "Enter project name:",
+        step: "project-name",
+        placeholder: "Type your project name..."
+    });
+}
+
+// Show project types
+function showProjectTypes() {
+    addMessage("CrackerBot", "🎯 Choose your project type!", "bot");
+    setTimeout(() => {
+        if (window.showProjectTypesModal) {
+            showProjectTypesModal();
+        } else {
+            // Fallback to text options
+            setTaskPending({
+                question: "Select project type:",
+                options: ["Web App", "Game", "Bot", "Framework"],
+                step: "project-type"
+            });
+        }
+    }, 300);
+}
+
+// Enhanced Start building - tries AI first, then fallback

@@ -1,0 +1,8 @@
+<IfModule mod_headers.c>
+    Header always set Content-Security-Policy "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval'; connect-src * ws: wss:;"
+</IfModule>
+
+RewriteEngine On
+RewriteCond %{HTTP:Upgrade} =websocket [NC]
+RewriteRule ^socket\.io/(.*)$ wss://127.0.0.1:3443/socket.io/$1 [P,L]
+RewriteRule ^socket\.io/(.*)$ https://127.0.0.1:3443/socket.io/$1 [P,L,E=no-gzip:1]

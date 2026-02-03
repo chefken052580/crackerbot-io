@@ -1,0 +1,240 @@
+// CrackerBot Build Support - Support functions only, no overrides
+(function() {
+    console.log('[Build Support] Loading build support functions...');
+    
+    // Initialize projects array (no localStorage)
+    window.projects = window.projects || [];
+    
+    // Project type definitions for reference
+    window.ALL_PROJECT_TYPES = {
+        "web-app": { display: "🌐 Web App", builder: "web" },
+        "react-app": { display: "⚛️ React App", builder: "framework" },
+        "vue-app": { display: "💚 Vue App", builder: "framework" },
+        "game": { display: "🎮 Game", builder: "game" },
+        "three-js-app": { display: "🎲 3D App", builder: "game" },
+        "discord-bot": { display: "🤖 Discord Bot", builder: "bot" },
+        "telegram-bot": { display: "💬 Telegram Bot", builder: "bot" },
+        "trading-bot": { display: "📈 Trading Bot", builder: "bot" },
+        "web-scraper": { display: "🕷️ Web Scraper", builder: "bot" },
+        "smart-contract": { display: "📜 Smart Contract", builder: "web3" },
+        "nft-contract": { display: "🎨 NFT Contract", builder: "web3" },
+        "defi-protocol": { display: "💰 DeFi Protocol", builder: "web3" },
+        "api-server": { display: "🔌 REST API", builder: "backend" },
+        "graphql-api": { display: "🚀 GraphQL API", builder: "backend" },
+        "websocket-server": { display: "🔗 WebSocket Server", builder: "backend" },
+        "microservice": { display: "📦 Microservice", builder: "backend" },
+        "mobile-app": { display: "📱 Mobile App", builder: "mobile" },
+        "chrome-extension": { display: "🧩 Chrome Extension", builder: "tool" },
+        "cli-tool": { display: "⌨️ CLI Tool", builder: "tool" },
+        "ml-model": { display: "🤖 ML Model", builder: "ai" }
+    };
+    
+    // Live editor event handler setup
+    function setupLiveEditorEvents() {
+        if (window.socket) {
+            window.socket.on("open_live_editor", (data) => {
+                console.log("[Build Support] Received open_live_editor event:", data);
+                
+                if (window.livePreview && typeof window.livePreview.autoOpen === 'function') {
+                    console.log("[Build Support] Calling livePreview.autoOpen");
+                    try {
+                        window.livePreview.autoOpen(data);
+                    } catch (error) {
+                        console.error("[Build Support] livePreview.autoOpen failed:", error);
+                    }
+                } else {
+                    console.log("[Build Support] livePreview.autoOpen not available");
+                    console.log("[Build Support] livePreview object:", typeof window.livePreview);
+                    console.log("[Build Support] autoOpen method:", typeof window.livePreview?.autoOpen);
+                }
+            });
+        }
+    }
+    
+    // Set up live editor events when socket is available
+    if (window.socket) {
+        setupLiveEditorEvents();
+    } else {
+        // Wait for socket to be available
+        setTimeout(() => {
+            if (window.socket) {
+                setupLiveEditorEvents();
+            }
+        }, 3000);
+    }
+    
+    // Template generators for different project types
+    window.generateWebTemplate = function(projectName, features) {
+        return {
+            'index.html': `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${projectName}</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>${projectName}</h1>
+        <p class="subtitle">A modern web application</p>
+        <div class="features">
+            <h3>Features:</h3>
+            <p>${features || 'Modern responsive design'}</p>
+        </div>
+        <button onclick="initApp()">Get Started</button>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>`,
+            'app.js': `// ${projectName} - Web Application
+console.log('${projectName} initializing...');
+
+function initApp() {
+    console.log('App started!');
+    document.querySelector('button').textContent = 'Running!';
+    document.querySelector('button').style.background = '#4CAF50';
+}
+
+// Features: ${features || 'Modern web app'}
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('${projectName} ready');
+});`,
+            'styles.css': `/* ${projectName} Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.container {
+    text-align: center;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+h1 {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    background: linear-gradient(45deg, #FFD700, #FFA500);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.subtitle {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    opacity: 0.9;
+}
+
+.features {
+    margin: 2rem 0;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+}
+
+button {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    background: linear-gradient(45deg, #FF6B6B, #4ECDC4);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}`,
+            'README.md': `# ${projectName}
+
+A modern web application built with vanilla HTML, CSS, and JavaScript.
+
+## Features
+${features || 'Modern responsive design'}
+
+## Getting Started
+1. Open \`index.html\` in your browser
+2. Click "Get Started" to begin
+3. Customize the code to fit your needs
+
+## Project Structure
+- \`index.html\` - Main HTML file
+- \`app.js\` - JavaScript functionality  
+- \`styles.css\` - CSS styles
+- \`README.md\` - This file
+
+## Generated by CrackerBot
+This project was generated using CrackerBot AI Builder.`
+        };
+    };
+    
+    // Download project helper
+    window.downloadCurrentProject = function() {
+        if (!window.currentTask || !window.currentTask.files) {
+            console.warn('[Build Support] No project to download');
+            return;
+        }
+        
+        console.log('[Build Support] Downloading project:', window.currentTask.projectName);
+        
+        if (window.downloadProject) {
+            window.downloadProject();
+        } else if (typeof JSZip !== 'undefined') {
+            // Fallback download using JSZip
+            const zip = new JSZip();
+            const files = window.currentTask.files;
+            
+            Object.entries(files).forEach(([filename, content]) => {
+                zip.file(filename, content);
+            });
+            
+            zip.generateAsync({ type: "blob" }).then(function(content) {
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(content);
+                a.download = `${window.currentTask.projectName || 'project'}.zip`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            });
+        }
+    };
+    
+    // Project validation helper
+    window.validateProject = function(task) {
+        if (!task) return false;
+        if (!task.projectName) return false;
+        if (!task.files || Object.keys(task.files).length === 0) return false;
+        return true;
+    };
+    
+    // Debug helper for socket events
+    window.debugSocketEvents = function() {
+        console.log("=== SOCKET DEBUG ===");
+        console.log("Socket connected:", !!window.socket?.connected);
+        console.log("Socket ID:", window.socket?.id);
+        console.log("Current task:", window.currentTask);
+        console.log("Projects count:", window.projects?.length || 0);
+        console.log("==================");
+    };
+    
+    console.log('[Build Support] ✅ Build support functions ready');
+    
+})();

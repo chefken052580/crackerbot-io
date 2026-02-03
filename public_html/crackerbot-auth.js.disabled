@@ -1,0 +1,51 @@
+// USER AUTHENTICATION - Single source of truth
+// Last updated: $(date)
+// This is the ONLY file for user persistence
+
+(function() {
+    // Get or create user
+    function initUser() {
+        let userName = localStorage.getItem("crackerBotUserName");
+        
+        if (userName) {
+            window.userName = userName;
+            updateUserDisplay(userName);
+            console.log("Welcome back:", userName);
+            
+            // Show main interface
+            setTimeout(() => {
+                if (window.showMainInterface) {
+                    window.showMainInterface();
+                }
+            }, 500);
+        } else {
+            // New user - ask for name
+            setTimeout(() => {
+                if (window.promptForName) {
+                    // window.promptForName(); // DISABLED - welcome-name.js handles this;
+                }
+            }, 500);
+        }
+    }
+    
+    function updateUserDisplay(name) {
+        const userNameEl = document.getElementById("user-name");
+        if (userNameEl) {
+            userNameEl.textContent = name;
+        }
+    }
+    
+    // Save user name
+    window.saveUserName = function(name) {
+        localStorage.setItem("crackerBotUserName", name);
+        window.userName = name;
+        updateUserDisplay(name);
+    };
+    
+    // Initialize
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initUser);
+    } else {
+        initUser();
+    }
+})();

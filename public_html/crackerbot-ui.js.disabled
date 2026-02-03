@@ -1,0 +1,72 @@
+// UI ELEMENTS - Single source of truth
+// This is the ONLY file for UI functionality
+
+window.addMessage = function(sender, text, type) {
+    const messagesDiv = document.getElementById("chat-messages");
+    if (!messagesDiv) return;
+    
+    const messageDiv = document.createElement("div");
+    messageDiv.className = `message ${type}-message`;
+    messageDiv.innerHTML = `<strong>${sender}:</strong> ${text}`;
+    messagesDiv.appendChild(messageDiv);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+};
+
+window.showPrompt = function(config) {
+    // Show choice bubbles
+    const bubbles = document.getElementById("choice-bubbles");
+    if (!bubbles) return;
+    
+    bubbles.innerHTML = "";
+    
+    if (config.options) {
+        config.options.forEach(option => {
+            const bubble = document.createElement("button");
+            bubble.className = "choice-bubble";
+            bubble.textContent = option;
+            bubble.onclick = () => window.handleInput(option, config.step);
+            bubbles.appendChild(bubble);
+        });
+    }
+};
+
+window.handleInput = function(input, step) {
+    console.log(`Input for ${step}: ${input}`);
+    
+    switch(step) {
+        case "name":
+            window.saveUserName(input);
+            window.showMainInterface();
+            break;
+        case "project-name":
+            currentTask.projectName = input;
+            // Show project types
+            window.showPrompt({
+                question: "Choose project type:",
+                options: Object.values(PROJECT_TYPES).map(t => t.display),
+                step: "project-type"
+            });
+            break;
+        case "project-type":
+            const typeKey = Object.keys(PROJECT_TYPES).find(k => PROJECT_TYPES[k].display === input);
+            currentTask.projectType = typeKey;
+            window.showPrompt({
+                question: "Describe features:",
+                step: "features",
+                placeholder: "What should it do?"
+            });
+            break;
+        case "features":
+            currentTask.features = input;
+            window.buildProject();
+            break;
+    }
+};
+
+window.showMainInterface = function() {
+    window.showPrompt({
+        question: "What would you like to do?",
+        options: ["🚀 Build Something Epic", "💬 Chat", "📁 View Projects"],
+        step: "main-choice"
+    });
+};

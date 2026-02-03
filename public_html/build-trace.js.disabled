@@ -1,0 +1,23 @@
+// Trace build flow completely
+console.log('[BUILD TRACE] Loading...');
+
+// Override startBuilding to add logging
+setTimeout(() => {
+    if (window.startBuilding) {
+        const originalStartBuilding = window.startBuilding;
+        window.startBuilding = function() {
+            console.log('[BUILD TRACE] startBuilding called!');
+            console.log('[BUILD TRACE] currentTask:', window.currentTask);
+            console.log('[BUILD TRACE] socket connected:', window.socket?.connected);
+            
+            try {
+                return originalStartBuilding.apply(this, arguments);
+            } catch (error) {
+                console.error('[BUILD TRACE] Error in startBuilding:', error);
+            }
+        };
+        console.log('[BUILD TRACE] startBuilding override installed');
+    } else {
+        console.error('[BUILD TRACE] No startBuilding function found!');
+    }
+}, 3000);

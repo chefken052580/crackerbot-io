@@ -1,0 +1,381 @@
+// AI CONNECTOR - Connects frontend to Claude API via backend (ERROR SAFE VERSION)
+
+class AIConnector {
+    constructor() {
+        this.connected = false;
+        this.retryCount = 0;
+        this.maxRetries = 5;
+        this.init();
+    }
+    
+    init() {
+        try {
+            // Check WebSocket connection with safety checks
+            if (typeof window !== 'undefined' && window.socket && window.socket.connected) {
+                this.connected = true;
+                console.log("[AI Connector] Connected to backend AI service");
+            } else {
+                console.log("[AI Connector] Waiting for WebSocket connection...");
+                if (this.retryCount < this.maxRetries) {
+                    this.retryCount++;
+                    setTimeout(() => this.init(), 2000);
+                } else {
+                    console.warn("[AI Connector] Max retries reached, using offline mode");
+                }
+            }
+        } catch (error) {
+            console.error("[AI Connector] Init error:", error);
+        }
+    }
+    
+    async generateProject(name, type, features) {
+        console.log("[AI Connector] Requesting project generation...");
+        
+        try {
+            if (!this.connected || !window.socket) {
+                console.warn("[AI Connector] Not connected, using local generation");
+                return this.localGeneration(name, type, features);
+            }
+            
+            return new Promise((resolve) => {
+                const timeout = setTimeout(() => {
+                    console.warn("[AI Connector] Request timed out, using local generation");
+                    resolve(this.localGeneration(name, type, features));
+                }, 10000);
+                
+                try {
+                    window.socket.emit("ai_generate_project", {
+                        name: name,
+                        type: type,
+                        features: features,
+                        timestamp: new Date().toISOString()
+                    });
+                    
+                    window.socket.once("project_generated", (data) => {
+                        clearTimeout(timeout);
+                        console.log("[AI Connector] Received AI-generated project");
+                        resolve(data.files || this.localGeneration(name, type, features));
+                    });
+                } catch (socketError) {
+                    clearTimeout(timeout);
+                    console.error("[AI Connector] Socket error:", socketError);
+                    resolve(this.localGeneration(name, type, features));
+                }
+            });
+        } catch (error) {
+            console.error("[AI Connector] Generate project error:", error);
+            return this.localGeneration(name, type, features);
+        }
+    }
+    
+    async modifyCode(command, code, fileType) {
+        console.log("[AI Connector] Requesting code modification...");
+        
+        try {
+            if (!this.connected || !window.socket) {
+                console.warn("[AI Connector] Not connected, using local modification");
+                return this.localModification(command, code, fileType);
+            }
+            
+            return new Promise((resolve) => {
+                const timeout = setTimeout(() => {
+                    console.warn("[AI Connector] Request timed out, using local modification");
+                    resolve(this.localModification(command, code, fileType));
+                }, 8000);
+                
+                try {
+                    window.socket.emit("ai_modify_code", {
+                        command: command,
+                        code: code,
+                        fileType: fileType
+                    });
+                    
+                    window.socket.once("code_modified", (data) => {
+                        clearTimeout(timeout);
+                        console.log("[AI Connector] Received AI-modified code");
+                        resolve(data.code || this.localModification(command, code, fileType));
+                    });
+                } catch (socketError) {
+                    clearTimeout(timeout);
+                    console.error("[AI Connector] Socket error:", socketError);
+                    resolve(this.localModification(command, code, fileType));
+                }
+            });
+        } catch (error) {
+            console.error("[AI Connector] Modify code error:", error);
+            return this.localModification(command, code, fileType);
+        }
+    }
+    
+    async analyzeFeatures(features) {
+        console.log("[AI Connector] Analyzing features...");
+        
+        try {
+            if (!this.connected || !window.socket) {
+                return { features: [], dependencies: [] };
+            }
+            
+            return new Promise((resolve) => {
+                const timeout = setTimeout(() => {
+                    resolve({ features: [], dependencies: [] });
+                }, 5000);
+                
+                try {
+                    window.socket.emit("ai_analyze_features", { features });
+                    
+                    window.socket.once("features_analyzed", (data) => {
+                        clearTimeout(timeout);
+                        resolve(data.analysis || { features: [], dependencies: [] });
+                    });
+                } catch (socketError) {
+                    clearTimeout(timeout);
+                    console.error("[AI Connector] Socket error:", socketError);
+                    resolve({ features: [], dependencies: [] });
+                }
+            });
+        } catch (error) {
+            console.error("[AI Connector] Analyze features error:", error);
+            return { features: [], dependencies: [] };
+        }
+    }
+    
+    // Local fallback generation
+    localGeneration(name, type, features) {
+        console.log("[AI Connector] Using local generation (Claude API not available)");
+        
+        const files = {};
+        const safeName = name || "MyProject";
+        const safeType = type || "webapp";
+        const safeFeatures = features || "basic functionality";
+        
+        files["index.html"] = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${safeName}</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app">
+        <h1>${safeName}</h1>
+        <p>Type: ${safeType}</p>
+        <p>Features: ${safeFeatures}</p>
+        <p style="color: orange;">Note: Claude API not connected - using basic template</p>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>`;
+        
+        files["app.js"] = `// ${safeName}
+// Type: ${safeType}
+// Features requested: ${safeFeatures}
+
+class App {
+    constructor() {
+        this.name = "${safeName}";
+        this.init();
+    }
+    
+    init() {
+        console.log(\`\${this.name} initialized\`);
+        
+        // Add basic functionality
+        const app = document.getElementById('app');
+        if (app) {
+            const button = document.createElement('button');
+            button.textContent = 'Click me!';
+            button.onclick = () => alert('Hello from ' + this.name);
+            app.appendChild(button);
+        }
+    }
+}
+
+// Initialize when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => new App());
+} else {
+    new App();
+}`;
+        
+        files["style.css"] = `/* ${safeName} Styles */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+}
+
+#app {
+    max-width: 1200px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+button {
+    background: #ff6b6b;
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    margin: 20px;
+}
+
+button:hover {
+    background: #ee5a5a;
+}`;
+        
+        return files;
+    }
+    
+    // Local fallback modification
+    localModification(command, code, fileType) {
+        console.log("[AI Connector] Using local modification (Claude API not available)");
+        
+        try {
+            const comment = fileType === "html" ? 
+                `<!-- AI Modification requested: ${command} -->\n` :
+                `// AI Modification requested: ${command}\n`;
+            
+            return comment + (code || '');
+        } catch (error) {
+            console.error("[AI Connector] Local modification error:", error);
+            return code || '';
+        }
+    }
+}
+
+// Safe initialization
+function initAIConnector() {
+    try {
+        if (typeof window !== 'undefined') {
+            window.aiConnector = new AIConnector();
+            
+            // Safe function overrides with existence checks
+            if (typeof window.buildProject === 'function') {
+                const originalBuildProject = window.buildProject;
+                window.buildProject = async function() {
+                    try {
+                        // Enhanced build with AI
+                        const featuresInput = document.getElementById("features-input");
+                        const features = featuresInput ? featuresInput.value : "";
+                        
+                        if (!window.currentTask) {
+                            window.currentTask = {};
+                        }
+                        
+                        window.currentTask.features = features;
+                        
+                        // Use AI to generate if available
+                        if (window.aiConnector && window.aiConnector.connected) {
+                            try {
+                                window.currentTask.files = await window.aiConnector.generateProject(
+                                    window.currentTask.projectName,
+                                    window.currentTask.projectType,
+                                    features
+                                );
+                            } catch (error) {
+                                console.error("[Build] AI generation error:", error);
+                                // Fall back to original function if AI fails
+                                if (originalBuildProject) {
+                                    return originalBuildProject.call(this);
+                                }
+                            }
+                        } else {
+                            // Use original function if AI not available
+                            if (originalBuildProject) {
+                                return originalBuildProject.call(this);
+                            }
+                        }
+                    } catch (error) {
+                        console.error("[Build] Enhanced build error:", error);
+                        if (originalBuildProject) {
+                            return originalBuildProject.call(this);
+                        }
+                    }
+                };
+            }
+            
+            // Safe AI command execution
+            if (typeof window.executeAICommand === 'function') {
+                const originalExecuteAICommand = window.executeAICommand;
+                window.executeAICommand = async function() {
+                    try {
+                        const commandInput = document.getElementById("ai-command");
+                        const command = commandInput ? commandInput.value : "";
+                        if (!command) return;
+                        
+                        const status = document.getElementById("ai-status");
+                        const editor = document.getElementById("code-editor");
+                        
+                        if (status) {
+                            status.textContent = "Processing command...";
+                            status.style.color = "#00ccff";
+                        }
+                        
+                        if (window.aiConnector && window.aiConnector.connected && editor) {
+                            try {
+                                const currentCode = editor.value || "";
+                                const fileType = window.currentEditFile ? 
+                                    window.currentEditFile.split(".").pop() : "txt";
+                                
+                                const modifiedCode = await window.aiConnector.modifyCode(
+                                    command, currentCode, fileType
+                                );
+                                
+                                editor.value = modifiedCode;
+                                
+                                if (window.currentTask && window.currentEditFile) {
+                                    window.currentTask.files[window.currentEditFile] = modifiedCode;
+                                }
+                                
+                                if (typeof window.updatePreview === 'function') {
+                                    window.updatePreview();
+                                }
+                                
+                                if (status) {
+                                    status.textContent = "Code updated!";
+                                    status.style.color = "#00ff88";
+                                }
+                            } catch (error) {
+                                console.error("[AI Command] Error:", error);
+                                if (status) {
+                                    status.textContent = "Error - try again";
+                                    status.style.color = "#ff4444";
+                                }
+                            }
+                        } else {
+                            // Fall back to original function
+                            if (originalExecuteAICommand) {
+                                return originalExecuteAICommand.call(this);
+                            }
+                        }
+                        
+                        if (commandInput) {
+                            commandInput.value = "";
+                        }
+                    } catch (error) {
+                        console.error("[AI Command] Enhanced execute error:", error);
+                    }
+                };
+            }
+        }
+    } catch (error) {
+        console.error("[AI Connector] Initialization error:", error);
+    }
+}
+
+// Initialize when document is ready
+if (typeof document !== 'undefined') {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initAIConnector);
+    } else {
+        // Delay initialization to let other scripts load
+        setTimeout(initAIConnector, 1000);
+    }
+}
+
+console.log("[AI Connector] Error-safe Claude API connector loaded");

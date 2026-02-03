@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Socket Test</title>
+    <style>
+        body { font-family: monospace; background: #1a1a2e; color: #0f0; padding: 20px; }
+        .log { background: #000; padding: 10px; margin: 5px 0; border-left: 3px solid #0f0; }
+        .error { border-left-color: #f00; color: #f00; }
+        button { background: #0f0; color: #000; border: none; padding: 10px 20px; margin: 5px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Socket Diagnostic</h1>
+    <div id="logs"></div>
+    <button onclick="testConnection()">Test Connection</button>
+    <button onclick="testBuild()">Test Build</button>
+    
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <script>
+        function log(msg, isError) {
+            const div = document.createElement('div');
+            div.className = 'log' + (isError ? ' error' : '');
+            div.textContent = new Date().toLocaleTimeString() + ' - ' + msg;
+            document.getElementById('logs').appendChild(div);
+            console.log(msg);
+        }
+
+        log('Page loaded');
+        log('Socket.io: ' + (typeof io !== 'undefined' ? 'LOADED' : 'NOT LOADED'));
+
+        let socket = null;
+
+        function testConnection() {
+            log('Connecting to https://crackerbot.io:8443...');
+            socket = io('https://crackerbot.io:8443', {
+                transports: ['websocket', 'polling'],
+                timeout: 10000
+            });
+
+            socket.on('connect', () => log('CONNECTED! ID: ' + socket.id));
+            socket.on('connect_error', (e) => log('ERROR: ' + e.message, true));
+            socket.on('disconnect', (r) => log('Disconnected: ' + r, true));
+            socket.on('project_generated', (d) => log('Project generated! Files: ' + Object.keys(d.files||{}).join(', ')));
+            socket.on('open_live_editor', (d) => log('Live editor: ' + d.projectName));
+            socket.on('live_build_update', (d) => log('Build update: ' + d.type));
+            socket.on('progress', (d) => log('Progress: ' + d.percent + '%'));
+            
+            setTimeout(() => { if (!socket.connected) log('Timeout - not connected', true); }, 5000);
+        }
+
+        function testBuild() {
+            if (!socket?.connected) { log('Not connected!', true); return; }
+            log('Sending build request...');
+            socket.emit('ai_generate_project', { name: 'Test', type: 'web-app', features: 'test site', taskId: Date.now() });
+        }
+
+        setTimeout(testConnection, 500);
+    </script>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CrackerBot Connection Test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body>
+    <h1>CrackerBot Connection Test</h1>
+    <div id="status">Connecting...</div>
+    <div id="messages"></div>
+
+    <script>
+        console.log('Test page loading...');
+        
+        const socket = io('/', {
+            path: '/socket.io/',
+            transports: ['websocket', 'polling']
+        });
+        
+        socket.on('connect', function() {
+            console.log('CONNECTED:', socket.id);
+            document.getElementById('status').innerHTML = 'Connected: ' + socket.id;
+        });
+        
+        socket.on('response', function(data) {
+            console.log('Message received:', data);
+            document.getElementById('messages').innerHTML += '<p>' + data.message + '</p>';
+        });
+        
+        socket.on('connect_error', function(error) {
+            console.error('Connection error:', error);
+            document.getElementById('status').innerHTML = 'Connection failed: ' + error;
+        });
+    </script>
+</body>
+</html>

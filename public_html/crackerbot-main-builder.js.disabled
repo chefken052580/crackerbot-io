@@ -1,0 +1,208 @@
+// CRACKERBOT MAIN BUILD CONTROLLER
+alert("🔧 Testing alerts work - this should show immediately");
+// Handles build flow and integrates with live streaming
+
+(function() {
+    console.log('[Main Builder] Loading unified build controller...');
+    
+    // Complete project types with builders
+    window.ALL_PROJECT_TYPES = {
+        "web-app": { display: "🌐 Web App", builder: "web" },
+        "react-app": { display: "⚛️ React App", builder: "framework" },
+        "vue-app": { display: "💚 Vue App", builder: "framework" },
+        "game": { display: "🎮 Game", builder: "game" },
+        "three-js-app": { display: "🎲 3D App", builder: "game" },
+        "discord-bot": { display: "🤖 Discord Bot", builder: "bot" },
+        "telegram-bot": { display: "💬 Telegram Bot", builder: "bot" },
+        "trading-bot": { display: "📈 Trading Bot", builder: "bot" },
+        "web-scraper": { display: "🕷️ Web Scraper", builder: "bot" },
+        "smart-contract": { display: "📜 Smart Contract", builder: "web3" },
+        "nft-contract": { display: "🎨 NFT Contract", builder: "web3" },
+        "defi-protocol": { display: "💰 DeFi Protocol", builder: "web3" },
+        "api-server": { display: "🔌 REST API", builder: "backend" },
+        "graphql-api": { display: "🚀 GraphQL API", builder: "backend" },
+        "websocket-server": { display: "🔗 WebSocket Server", builder: "backend" },
+        "microservice": { display: "📦 Microservice", builder: "backend" },
+        "mobile-app": { display: "📱 Mobile App", builder: "mobile" },
+        "chrome-extension": { display: "🧩 Chrome Extension", builder: "tool" },
+        "cli-tool": { display: "⌨️ CLI Tool", builder: "tool" },
+        "ml-model": { display: "🤖 ML Model", builder: "ai" }
+    };
+    
+    // Main option handler
+    window.handleOption = function(option) {
+        console.log('[Main Builder] Option selected:', option);
+    alert("🎯 Unified controller handling: " + option);
+        
+        if (window.addMessage) {
+            window.addMessage("You", option, "user");
+        }
+        
+        const bubbles = document.getElementById('choice-bubbles');
+        if (bubbles) bubbles.innerHTML = '';
+        
+        if (option.includes("Build") || option.includes("Epic")) {
+            startBuildFlow();
+        } else if (option.includes("Chat")) {
+            if (window.addMessage) {
+                window.addMessage("CrackerBot", "💬 Let's chat! What's on your mind?", "bot");
+            }
+        } else if (option.includes("Projects")) {
+            if (window.showProjectsManager) {
+                window.showProjectsManager();
+            }
+        }
+    };
+    
+    // Start build flow
+    function startBuildFlow() {
+        window.currentTask = { mode: "building" };
+        
+        if (window.addMessage) {
+            window.addMessage("CrackerBot", "🚀 Let's build something epic! What shall we name your masterpiece?", "bot");
+        }
+        
+        const input = document.getElementById('message-input');
+        if (input) {
+            input.placeholder = "Enter project name...";
+            input.focus();
+        }
+        
+        window.taskPending = { step: "name" };
+    }
+    
+    // Show project types
+    function showProjectTypes() {
+        const bubbles = document.getElementById('choice-bubbles');
+        if (!bubbles) return;
+        
+        bubbles.innerHTML = '';
+        
+        Object.entries(window.ALL_PROJECT_TYPES).forEach(([key, config]) => {
+            const btn = document.createElement('button');
+            btn.className = 'choice-bubble';
+            btn.textContent = config.display;
+            btn.onclick = () => selectProjectType(key, config);
+            bubbles.appendChild(btn);
+        });
+        
+        bubbles.style.display = 'flex';
+        
+        if (window.addMessage) {
+            window.addMessage("CrackerBot", "What type of project?", "bot");
+        }
+    }
+    
+    // Select project type
+    function selectProjectType(type, config) {
+        window.currentTask.projectType = type;
+        window.currentTask.projectTypeName = config.display.substring(2);
+        window.currentTask.builderType = config.builder;
+        
+        if (window.addMessage) {
+            window.addMessage("You", config.display, "user");
+            window.addMessage("CrackerBot", `✨ What features should your ${config.display} have?`, "bot");
+        }
+        
+        const bubbles = document.getElementById('choice-bubbles');
+        if (bubbles) bubbles.innerHTML = '';
+        
+        const input = document.getElementById('message-input');
+        if (input) {
+            input.placeholder = `Describe features for your ${config.display}...`;
+            input.focus();
+        }
+        
+        window.taskPending = { step: "features" };
+    }
+    
+    // Start live building - THIS IS THE KEY INTEGRATION
+    function startLiveBuilding() {
+        console.log("[Main Builder] Starting live build:", window.currentTask);
+        
+        console.log("[Debug] Checking for live preview...");
+        console.log("[Debug] window.livePreview exists:", !!window.livePreview);
+        console.log("[Debug] autoOpen function exists:", !!(window.livePreview && window.livePreview.autoOpen));
+        
+        if (window.livePreview && window.livePreview.autoOpen) {
+            try {
+                console.log("[Debug] About to call autoOpen...");
+                window.livePreview.autoOpen({
+                    projectName: window.currentTask.projectName,
+                    projectType: window.currentTask.projectType,
+                    projectTypeName: window.currentTask.projectTypeName,
+                    builderType: window.currentTask.builderType,
+                    features: window.currentTask.features
+                });
+                console.log("[Debug] autoOpen called successfully");
+            } catch (error) {
+                console.error("[Debug] autoOpen failed:", error);
+                alert("Live streaming failed: " + error.message);
+            }
+        } else {
+            alert("Live AI Builder not available. window.livePreview: " + !!window.livePreview);
+        }
+    }
+            console.log("[Debug] autoOpen called successfully");
+        } catch (error) {
+            console.error("[Debug] autoOpen failed:", error);
+            alert("Live streaming failed: " + error.message);
+        }
+            console.log("[Debug] autoOpen called successfully");
+        } catch (error) {
+            console.error("[Debug] autoOpen failed:", error);
+            alert("Live streaming failed: " + error.message);
+        }
+            });
+        } else {
+            alert("Live AI Builder not available. Please refresh page.");
+        
+        }
+    }
+    
+    // Override sendMessage for build flow
+    const originalSendMessage = window.sendMessage;
+    window.sendMessage = function() {
+        const input = document.getElementById('message-input');
+        const text = input.value.trim();
+        
+        if (!text) return;
+        
+        if (window.taskPending) {
+            if (window.taskPending.step === 'name') {
+                window.currentTask.projectName = text;
+                if (window.addMessage) {
+                    window.addMessage('You', text, 'user');
+                }
+                input.value = '';
+                window.taskPending = null;
+                showProjectTypes();
+                return;
+                
+            } else if (window.taskPending.step === 'features') {
+                window.currentTask.features = text;
+                if (window.addMessage) {
+                    window.addMessage('You', text, 'user');
+                }
+                input.value = '';
+                window.taskPending = null;
+                startLiveBuilding(); // THIS REPLACES NORMAL BUILD
+                return;
+            }
+        }
+        
+        // Normal chat
+        if (originalSendMessage) {
+            originalSendMessage.apply(this, arguments);
+        }
+    };
+    
+    // Define startBuilding to redirect to live streaming
+    window.startBuilding = function() {
+        console.log("[Build Redirect] startBuilding called, redirecting to live streaming...");
+        startLiveBuilding();
+    };
+    
+    console.log('[Main Builder] ✅ Unified build controller ready with live streaming integration');
+    alert("✅ Unified build controller loaded!");
+})();

@@ -1,0 +1,554 @@
+// CRACKERBOT POST-BUILD OPTIONS - Complete System
+(function() {
+    console.log('[Post-Build] Initializing post-build system...');
+    
+    // Show post-build options after project completes
+    window.showPostBuildOptions = function() {
+        console.log('[Post-Build] Showing options for:', window.currentTask?.projectName);
+        
+        if (!window.currentTask || !window.currentTask.files) {
+            console.error('[Post-Build] No current task or files!');
+            return;
+        }
+        
+        const bubbles = document.getElementById('choice-bubbles');
+        if (!bubbles) {
+            console.error('[Post-Build] No choice-bubbles element found!');
+            return;
+        }
+        
+        // Clear and show post-build options
+        bubbles.innerHTML = '';
+        bubbles.style.display = 'flex';
+        bubbles.style.flexWrap = 'wrap';
+        bubbles.style.gap = '10px';
+        bubbles.style.justifyContent = 'center';
+        bubbles.style.padding = '15px';
+        
+        // Create styled buttons
+        const options = [
+            {
+                text: '👁️ Preview & Edit',
+                color: 'linear-gradient(135deg, #00ff88, #00ccff)',
+                textColor: '#000',
+                action: () => openProjectPreview()
+            },
+            {
+                text: '📥 Download ZIP',
+                color: 'linear-gradient(135deg, #00ccff, #0088ff)',
+                textColor: '#fff',
+                action: () => downloadCurrentProject()
+            },
+            {
+                text: '📁 All Projects',
+                color: 'linear-gradient(135deg, #8a2be2, #00ff88)',
+                textColor: '#fff',
+                action: () => openProjectsManager()
+            },
+            {
+                text: '🗑️ Delete',
+                color: 'linear-gradient(135deg, #ff4444, #ff6666)',
+                textColor: '#fff',
+                action: () => deleteCurrentProject()
+            },
+            {
+                text: '🚀 New Project',
+                color: 'linear-gradient(135deg, #ffa500, #ff6347)',
+                textColor: '#fff',
+                action: () => startNewProject()
+            },
+            {
+                text: '💬 Back to Chat',
+                color: 'rgba(255, 255, 255, 0.1)',
+                borderColor: '#fff',
+                textColor: '#fff',
+                action: () => backToMain()
+            }
+        ];
+        
+        options.forEach(opt => {
+            const button = document.createElement('button');
+            button.className = 'choice-bubble post-build-option';
+            button.textContent = opt.text;
+            button.style.cssText = `
+                background: ${opt.color};
+                color: ${opt.textColor};
+                border: ${opt.borderColor ? `2px solid ${opt.borderColor}` : 'none'};
+                padding: 12px 24px;
+                border-radius: 25px;
+                cursor: pointer;
+                font-weight: bold;
+                transition: all 0.3s;
+                font-size: 14px;
+                min-width: 140px;
+            `;
+            
+            button.onmouseenter = function() {
+                this.style.transform = 'translateY(-2px)';
+                this.style.boxShadow = '0 6px 20px rgba(0, 255, 136, 0.4)';
+            };
+            
+            button.onmouseleave = function() {
+                this.style.transform = 'translateY(0)';
+                this.style.boxShadow = 'none';
+            };
+            
+            button.onclick = opt.action;
+            bubbles.appendChild(button);
+        });
+        
+        // Show completion message if not already shown
+        if (window.addMessage && !window.postBuildMessageShown) {
+            window.addMessage('CrackerBot', 
+                `🎉 Your project "${window.currentTask.projectName}" is ready! What would you like to do?`, 
+                'bot'
+            );
+            window.postBuildMessageShown = true;
+        }
+    };
+    
+    // Open project preview with AI editor
+    window.openProjectPreview = function() {
+        console.log('[Post-Build] Opening preview for:', window.currentTask?.projectName);
+        
+        if (!window.currentTask || !window.currentTask.files) {
+            console.error('[Post-Build] No project to preview!');
+            return;
+        }
+        
+        // Try different preview methods in order of preference
+        if (window.showPreviewWithAI) {
+            if(window.livePreview) { window.livePreview.autoOpen({ taskId: Date.now(), projectName: window.currentTask.projectName, projectType: window.currentTask.projectType, features: window.currentTask.features, frontendId: "auto-preview" }); } else { window.showPreviewWithAI(window.currentTask); }
+        } else if (window.showPreviewPopup) {
+            window.showPreviewPopup(window.currentTask, window.socket);
+        } else if (window.editWithAI) {
+            window.editWithAI();
+        } else if (window.previewProject) {
+            window.previewProject();
+        } else {
+            console.error('[Post-Build] No preview method available!');
+            if (window.addMessage) {
+                window.addMessage('System', '⚠️ Preview system loading...', 'system');
+            }
+        }
+    };
+    
+    // Download current project
+    window.downloadCurrentProject = function() {
+        console.log('[Post-Build] Downloading:', window.currentTask?.projectName);
+        
+        if (!window.currentTask || !window.currentTask.files) {
+            console.error('[Post-Build] No project to download!');
+            return;
+        }
+        
+        // Check for JSZip
+        if (typeof JSZip === 'undefined') {
+            console.log('[Post-Build] Loading JSZip...');
+            const script = document.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+            script.onload = () => {
+                console.log('[Post-Build] JSZip loaded, downloading...');
+                downloadCurrentProject();
+            };
+            document.body.appendChild(script);
+            return;
+        }
+        
+        // Create ZIP
+        const zip = new JSZip();
+        const projectName = window.currentTask.projectName || 'project';
+        
+        // Add all files to ZIP
+        Object.entries(window.currentTask.files).forEach(([filename, content]) => {
+            zip.file(filename, content);
+        });
+        
+        // Generate and download
+        zip.generateAsync({ type: 'blob' }).then(content => {
+            const url = URL.createObjectURL(content);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${projectName.toLowerCase().replace(/\s+/g, '-')}.zip`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            if (window.addMessage) {
+                window.addMessage('System', `📥 Downloaded "${projectName}.zip"`, 'system');
+            }
+        });
+    };
+    
+    // Open projects manager
+    window.openProjectsManager = function() {
+        console.log('[Post-Build] Opening projects manager...');
+        
+        if (window.showProjectsManager) {
+            window.showProjectsManager();
+        } else {
+            if (window.addMessage) {
+                window.addMessage('System', `📁 You have ${projects.length} saved projects`, 'system');
+            }
+        }
+    };
+    
+    // Delete current project
+    window.deleteCurrentProject = function() {
+        console.log('[Post-Build] Delete request for:', window.currentTask?.projectName);
+        
+        if (!window.currentTask) {
+            console.error('[Post-Build] No project to delete!');
+            return;
+        }
+        
+        const projectName = window.currentTask.projectName;
+        const confirmDelete = confirm(`🗑️ Delete "${projectName}"?\n\nThis action cannot be undone!`);
+        
+        if (confirmDelete) {
+            // Find and remove from storage
+            const index = projects.findIndex(p => 
+                p.projectName === projectName && 
+                p.completedAt === window.currentTask.completedAt
+            );
+            
+            if (index !== -1) {
+                projects.splice(index, 1);
+                
+                if (window.addMessage) {
+                    window.addMessage('System', `🗑️ Deleted "${projectName}"`, 'system');
+                }
+            }
+            
+            // Clear current task and go back to main
+            window.currentTask = null;
+            window.postBuildMessageShown = false;
+            backToMain();
+        }
+    };
+    
+    // Start new project
+    window.startNewProject = function() {
+        console.log('[Post-Build] Starting new project...');
+        
+        // Clear current task
+        window.currentTask = { mode: 'building' };
+        window.postBuildMessageShown = false;
+        
+        // Start build flow
+        if (window.promptProjectName) {
+            window.promptProjectName();
+        } else if (window.handleOption) {
+            window.handleOption('Build-Something-Epic');
+        } else {
+            console.error('[Post-Build] No build method available!');
+        }
+    };
+    
+    // Back to main menu
+    window.backToMain = function() {
+        console.log('[Post-Build] Returning to main menu...');
+        
+        // Clear task
+        window.currentTask = null;
+        window.postBuildMessageShown = false;
+        
+        // Show main choices
+        if (window.showMainChoice) {
+            window.showMainChoice();
+        } else {
+            // Fallback - create main choices manually
+            const bubbles = document.getElementById('choice-bubbles');
+            if (bubbles) {
+                bubbles.innerHTML = '';
+                bubbles.style.display = 'flex';
+                
+                const mainOptions = [
+                    '💬 Chat',
+                    '🚀 Build Something Epic',
+                    '📁 View Projects'
+                ];
+                
+                mainOptions.forEach(option => {
+                    const button = document.createElement('button');
+                    button.className = 'choice-bubble';
+                    button.textContent = option;
+                    button.onclick = () => {
+                        if (window.handleOption) {
+                            window.handleOption(option.replace(/[^\w\s-]/g, '').trim());
+                        }
+                    };
+                    bubbles.appendChild(button);
+                });
+            }
+        }
+        
+        if (window.addMessage) {
+            window.addMessage('CrackerBot', '👋 What would you like to do next?', 'bot');
+        }
+    };
+    
+    // Enhanced preview with AI editor
+    window.showPreviewWithAI = function(task) {
+        console.log('[Post-Build] Opening enhanced preview...');
+        
+        if (!task || !task.files) {
+            console.error('[Post-Build] Invalid task for preview');
+            return;
+        }
+        
+        // Remove any existing modal
+        const existingModal = document.getElementById('preview-ai-modal');
+        if (existingModal) existingModal.remove();
+        
+        // Create preview modal with AI editor
+        const modal = document.createElement('div');
+        modal.id = 'preview-ai-modal';
+        modal.className = 'preview-modal-overlay';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        `;
+        
+        const files = Object.keys(task.files);
+        const htmlFile = files.find(f => f.endsWith('.html')) || files[0];
+        
+        modal.innerHTML = `
+            <div style="width: 95%; height: 90%; background: #1a1a2e; border: 2px solid #00ff88; border-radius: 15px; display: flex; flex-direction: column; box-shadow: 0 0 50px rgba(0, 255, 136, 0.3);">
+                <!-- Header -->
+                <div style="padding: 20px; background: linear-gradient(135deg, rgba(0, 255, 136, 0.1), rgba(0, 204, 255, 0.1)); border-bottom: 2px solid #00ff88; display: flex; justify-content: space-between; align-items: center;">
+                    <h2 style="color: #00ff88; margin: 0; font-size: 24px;">
+                        🚀 ${task.projectName} - AI Preview Editor
+                    </h2>
+                    <div style="display: flex; gap: 10px;">
+                        <button onclick="downloadCurrentProject()" 
+                                style="background: linear-gradient(135deg, #00ccff, #0088ff); color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 25px; font-weight: bold;">
+                            📥 Download
+                        </button>
+                        <button onclick="document.getElementById('preview-ai-modal').remove(); showPostBuildOptions();" 
+                                style="background: linear-gradient(135deg, #ff4444, #ff6666); color: white; border: none; padding: 10px 20px; cursor: pointer; border-radius: 25px; font-weight: bold;">
+                            ✕ Close
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Content -->
+                <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 15px; overflow: hidden;">
+                    <!-- Left: Code Editor -->
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <!-- File Tabs -->
+                        <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                            ${files.map(file => `
+                                <button onclick="selectPreviewFile('${file}')"
+                                        id="tab-${file.replace(/[^a-z0-9]/gi, '_')}"
+                                        style="padding: 8px 16px; background: ${file === htmlFile ? '#00ff88' : 'rgba(0, 255, 136, 0.1)'}; 
+                                               color: ${file === htmlFile ? '#000' : '#00ff88'}; 
+                                               border: 1px solid #00ff88; cursor: pointer; border-radius: 20px; transition: all 0.2s;">
+                                    ${file}
+                                </button>
+                            `).join('')}
+                        </div>
+                        
+                        <!-- Code Editor -->
+                        <textarea id="preview-code-editor"
+                                  style="flex: 1; background: #0a0a0a; color: #00ff88; padding: 15px; 
+                                         border: 1px solid #00ff88; border-radius: 10px; 
+                                         font-family: 'Courier New', monospace; font-size: 14px; 
+                                         resize: none; outline: none;"
+                                  spellcheck="false"
+                                  oninput="updateLivePreview()">${task.files[htmlFile] || ''}</textarea>
+                        
+                        <!-- AI Assistant -->
+                        <div style="background: linear-gradient(135deg, rgba(138, 43, 226, 0.1), rgba(0, 255, 136, 0.1)); 
+                                    padding: 15px; border-radius: 10px; border: 1px solid #8a2be2;">
+                            <h3 style="color: #8a2be2; margin: 0 0 10px 0; font-size: 16px;">🤖 AI Assistant</h3>
+                            <input type="text" id="ai-request-input"
+                                   placeholder="Tell AI what to change (e.g., 'make it dark mode' or 'add animations')"
+                                   style="width: 100%; padding: 10px; background: #0a0a0a; 
+                                          border: 1px solid #8a2be2; color: #00ff88; 
+                                          border-radius: 5px; margin-bottom: 10px;"
+                                   onkeypress="if(event.key==='Enter') applyAIChange()">
+                            <button onclick="applyAIChange()"
+                                    style="width: 100%; padding: 10px; 
+                                           background: linear-gradient(135deg, #8a2be2, #00ff88); 
+                                           color: white; border: none; border-radius: 5px; 
+                                           cursor: pointer; font-weight: bold;">
+                                ✨ Apply AI Changes
+                            </button>
+                            <div id="ai-status" style="margin-top: 10px; color: #888; font-size: 12px;">Ready</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Right: Live Preview -->
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <div style="padding: 10px; background: rgba(0, 255, 136, 0.1); 
+                                    border: 1px solid #00ff88; border-radius: 10px;">
+                            <h3 style="color: #00ff88; margin: 0; font-size: 16px;">
+                                👁️ Live Preview <span style="font-size: 12px; color: #888;">(Updates as you type)</span>
+                            </h3>
+                        </div>
+                        <iframe id="preview-frame"
+                                style="flex: 1; background: white; border: 1px solid #00ff88; 
+                                       border-radius: 10px; width: 100%;"
+                                sandbox="allow-scripts allow-same-origin"></iframe>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Set current file
+        window.currentPreviewFile = htmlFile;
+        window.currentPreviewTask = task;
+        
+        // Initialize preview
+        updateLivePreview();
+    };
+    
+    // Select file in preview
+    window.selectPreviewFile = function(filename) {
+        window.currentPreviewFile = filename;
+        const editor = document.getElementById('preview-code-editor');
+        if (editor && window.currentPreviewTask) {
+            editor.value = window.currentPreviewTask.files[filename] || '';
+        }
+        
+        // Update tab styles
+        document.querySelectorAll('[id^="tab-"]').forEach(tab => {
+            tab.style.background = 'rgba(0, 255, 136, 0.1)';
+            tab.style.color = '#00ff88';
+        });
+        
+        const activeTab = document.getElementById(`tab-${filename.replace(/[^a-z0-9]/gi, '_')}`);
+        if (activeTab) {
+            activeTab.style.background = '#00ff88';
+            activeTab.style.color = '#000';
+        }
+        
+        // Update preview if HTML
+        if (filename.endsWith('.html')) {
+            updateLivePreview();
+        }
+    };
+    
+    // Update live preview
+    window.updateLivePreview = function() {
+        const editor = document.getElementById('preview-code-editor');
+        const iframe = document.getElementById('preview-frame');
+        
+        if (!editor || !iframe || !window.currentPreviewTask) return;
+        
+        // Save current file
+        window.currentPreviewTask.files[window.currentPreviewFile] = editor.value;
+        
+        // Get HTML file
+        const htmlFile = Object.keys(window.currentPreviewTask.files).find(f => f.endsWith('.html'));
+        if (!htmlFile) return;
+        
+        let html = window.currentPreviewTask.files[htmlFile];
+        
+        // Inject CSS and JS inline
+        Object.entries(window.currentPreviewTask.files).forEach(([filename, content]) => {
+            if (filename.endsWith('.css')) {
+                html = html.replace('</head>', `<style>${content}</style>\n</head>`);
+            }
+            if (filename.endsWith('.js') && !filename.includes('/')) {
+                html = html.replace('</body>', `<script>${content}</script>\n</body>`);
+            }
+        });
+        
+        iframe.srcdoc = html;
+    };
+    
+    // Apply AI changes
+    window.applyAIChange = function() {
+        const input = document.getElementById('ai-request-input');
+        const editor = document.getElementById('preview-code-editor');
+        const status = document.getElementById('ai-status');
+        
+        if (!input || !editor) return;
+        
+        const request = input.value.trim();
+        if (!request) return;
+        
+        status.textContent = '🤔 Processing...';
+        
+        // Simulate AI changes (in production, call your AI endpoint)
+        setTimeout(() => {
+            let code = editor.value;
+            const req = request.toLowerCase();
+            
+            if (window.currentPreviewFile.endsWith('.html')) {
+                if (req.includes('dark')) {
+                    code = code.replace('<body', '<body style="background:#1a1a1a;color:white;"');
+                }
+                if (req.includes('title')) {
+                    const newTitle = request.match(/title\s+to\s+["']?([^"']+)["']?/i)?.[1] || 'New Title';
+                    code = code.replace(/<title>.*?<\/title>/, `<title>${newTitle}</title>`);
+                }
+            } else if (window.currentPreviewFile.endsWith('.css')) {
+                if (req.includes('dark')) {
+                    code = `/* Dark mode */\nbody { background: #1a1a1a !important; color: white !important; }\n` + code;
+                }
+            }
+            
+            editor.value = code;
+            updateLivePreview();
+            status.textContent = '✅ Applied!';
+            input.value = '';
+            
+            setTimeout(() => {
+                status.textContent = 'Ready';
+            }, 2000);
+        }, 1000);
+    };
+    
+    // Override completeBuilding to ensure post-build options show
+    const originalCompleteBuilding = window.completeBuilding;
+    window.completeBuilding = function() {
+        console.log('[Post-Build] Intercepting completeBuilding...');
+        
+        // Call original if exists
+        if (originalCompleteBuilding) {
+            originalCompleteBuilding.apply(this, arguments);
+        }
+        
+        // Ensure post-build options show
+        setTimeout(() => {
+            window.showPostBuildOptions();
+        }, 500);
+    };
+    
+    console.log('[Post-Build] ✅ Post-build system ready!');
+})();// Override openProjectPreview to use live streaming
+window.openProjectPreview = function() {
+    console.log('[Live Preview Override] Opening live streaming preview...');
+    
+    if (!window.currentTask || !window.currentTask.files) {
+        console.error('[Live Preview Override] No project to preview!');
+        return;
+    }
+    
+    if (window.livePreview) {
+        window.livePreview.autoOpen({
+            taskId: Date.now(),
+            projectName: window.currentTask.projectName || 'Generated Project',
+            projectType: window.currentTask.projectType || 'web-app',
+            features: window.currentTask.features || 'AI Generated Features',
+            frontendId: 'auto-preview'
+        });
+    } else {
+        console.error('[Live Preview Override] Live preview system not loaded!');
+    }
+};
+console.log('[Live Preview Override] Function replaced!');

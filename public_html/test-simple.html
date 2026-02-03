@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple AI Test</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.5/socket.io.min.js"></script>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            background: #1a1a2e; 
+            color: white; 
+        }
+        input, button { 
+            padding: 10px; 
+            margin: 5px; 
+            border-radius: 5px; 
+            border: 1px solid #00ff88; 
+            background: #333; 
+            color: white; 
+        }
+        button { 
+            background: linear-gradient(135deg, #00ff88, #00ccff); 
+            color: black; 
+            cursor: pointer; 
+        }
+        #log { 
+            background: #000; 
+            padding: 10px; 
+            border: 1px solid #00ff88; 
+            height: 300px; 
+            overflow-y: auto; 
+            font-family: monospace; 
+            margin-top: 10px; 
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Simple AI Test</h1>
+    
+    <input type="text" id="messageInput" placeholder="Type: create a website about cats" style="width: 300px;">
+    <button onclick="sendMessage()">📤 Send Message</button>
+    <button onclick="testAI()">🚀 Test AI Direct</button>
+    <button onclick="clearLog()">🗑️ Clear</button>
+    
+    <div id="log"></div>
+    
+    <script>
+        // Simple logging
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            logDiv.innerHTML += `<div>[${time}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        // Connect to backend
+        const socket = io('https://crackerbot.io:8443');
+        
+        socket.on('connect', () => {
+            log('✅ Connected to backend - Socket ID: ' + socket.id);
+        });
+        
+        socket.on('disconnect', () => {
+            log('❌ Disconnected from backend');
+        });
+        
+        socket.on('response', (data) => {
+            log('💬 Response: ' + data.message);
+        });
+        
+        socket.on('progress', (data) => {
+            log('📈 Progress: ' + data.percent + '% - ' + data.status);
+        });
+        
+        socket.on('project_generated', (data) => {
+            log('🎉 PROJECT GENERATED!');
+            log('📁 Files: ' + Object.keys(data.files).join(', '));
+            log('📝 Total files: ' + Object.keys(data.files).length);
+        });
+        
+        socket.on('error', (data) => {
+            log('❌ Error: ' + data.message);
+        });
+        
+        // Send regular message
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const text = input.value.trim();
+            
+            if (!text) {
+                log('⚠️ No message to send');
+                return;
+            }
+            
+            log('📤 Sending message: "' + text + '"');
+            
+            socket.emit('message', {
+                text: text,
+                type: 'message',
+                frontendId: socket.id,
+                user: 'TestUser'
+            });
+            
+            input.value = '';
+        }
+        
+        // Test direct AI
+        function testAI() {
+            log('🚀 Testing direct AI generation...');
+            
+            socket.emit('ai_generate_project', {
+                name: 'Test Website',
+                type: 'website',
+                features: 'cool test website for debugging'
+            });
+        }
+        
+        // Clear log
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+        
+        // Enter key support
+        document.getElementById('messageInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        log('🎯 Test page loaded. Try typing a message!');
+    </script>
+</body>
+</html>

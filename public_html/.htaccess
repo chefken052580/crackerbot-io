@@ -1,0 +1,29 @@
+# Content Security Policy - Allow everything for Socket.io
+<IfModule mod_headers.c>
+    Header always set Content-Security-Policy "default-src * 'unsafe-inline' 'unsafe-eval' data: blob:; script-src * 'unsafe-inline' 'unsafe-eval' blob:; connect-src * ws: wss: https:; worker-src * blob:;"
+    Header always set Access-Control-Allow-Origin "*"
+    Header always set Access-Control-Allow-Methods "GET, POST, OPTIONS"
+    Header always set Access-Control-Allow-Headers "Content-Type"
+</IfModule>
+
+# Set crackerbot.html as the default index file
+DirectoryIndex crackerbot.html index.html
+
+RewriteEngine On
+
+# WebSocket proxy rules - FIXED PORT 8443
+RewriteCond %{HTTP:Upgrade} =websocket [NC]
+RewriteRule ^socket\.io/(.*)$ ws://127.0.0.1:8443/socket.io/$1 [P,L]
+
+RewriteCond %{HTTP:Upgrade} !=websocket [NC]
+RewriteRule ^socket\.io/(.*)$ http://127.0.0.1:8443/socket.io/$1 [P,L]
+
+# If accessing root directory, serve crackerbot.html
+RewriteRule ^$ crackerbot.html [L]
+
+# php -- BEGIN cPanel-generated handler, do not edit
+# Set the “ea-php82” package as the default “PHP” programming language.
+<IfModule mime_module>
+  AddHandler application/x-httpd-ea-php82 .php .php8 .phtml
+</IfModule>
+# php -- END cPanel-generated handler, do not edit

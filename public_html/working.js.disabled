@@ -1,0 +1,406 @@
+let socket = null;
+let userName = localStorage.getItem("crackerBotUserName") || "Guest";
+let isConnected = false;
+let currentTask = null;
+let messageHistory = [];
+let commandIndex = -1;
+let buildInterval = null;
+let currentTheme = "matrix";
+let sidebarCollapsed = false;
+
+const mockTokens = [
+    { name: "Solana", symbol: "SOL", price: "$98.45", change: "+5.2%" },
+    { name: "Bonk", symbol: "BONK", price: "$0.000027", change: "+12.8%" },
+    { name: "Jupiter", symbol: "JUP", price: "$1.23", change: "-2.1%" }
+];
+
+const commands = [
+    { command: "/create", description: "Start a new project" },
+    { command: "/projects", description: "List your projects" },
+    { command: "/download", description: "Grab your latest file" },
+    { command: "/reset_name", description: "Change your name" },
+    { command: "/warp_reconnect", description: "Reset user state" },
+    { command: "/tone", description: "Set my vibe" },
+    { command: "/guide", description: "See all commands" },
+    { command: "/clear", description: "Clear the chat" },
+    { command: "/status", description: "Check system status" }
+];
+
+function initMatrixRain() {
+    const canvas = document.getElementById("effects-canvas");
+    const ctx = canvas.getContext("2d");
+    
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    
+    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$%^&*()";
+    const fontSize = 14;
+    const columns = canvas.width / fontSize;
+    const drops = Array(Math.floor(columns)).fill(1);
+    
+    function draw() {
+        ctx.fillStyle = "rgba(10, 15, 10, 0.1)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        ctx.fillStyle = "#00ff85";
+        ctx.font = fontSize + "px monospace";
+        
+        for (let i = 0; i < drops.length; i++) {
+            const text = chars.charAt(Math.floor(Math.random() * chars.length));
+            ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+            
+            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) {
+                drops[i] = 0;
+            }
+            drops[i]++;
+        }
+    }
+    
+    setInterval(draw, 35);
+}
+
+function changeTheme(theme) {
+    currentTheme = theme;
+    document.body.className = theme + "-theme";
+    addMessage("System", "Theme changed to: " + theme, "system");
+}
+
+function toggleSidebar() {
+    sidebarCollapsed = !sidebarCollapsed;
+    const sidebar = document.getElementById("sidebar");
+    
+    if (sidebarCollapsed) {
+        sidebar.classList.add("collapsed");
+    } else {
+        sidebar.classList.remove("collapsed");
+    }
+}
+
+function switchTab(event, tabName) {
+    document.querySelectorAll(".sidebar-tab").forEach(tab => {
+        tab.classList.remove("active");
+    });
+    event.target.classList.add("active");
+    
+    document.querySelectorAll(".tab-panel").forEach(panel => {
+        panel.style.display = "none";
+    });
+    
+    if (tabName === "tokens") {
+        document.getElementById("tokens-panel").style.display = "block";
+        loadTokens();
+    } else if (tabName === "wallets") {
+        document.getElementById("wallets-panel").style.display = "block";
+    }
+}
+
+function loadTokens() {
+    const tokenList = document.getElementById("token-list");
+    tokenList.innerHTML = "";
+    
+    mockTokens.forEach(token => {
+        const item = document.createElement("div");
+        item.className = "token-item";
+        item.innerHTML = token.symbol + " - " + token.name + " " + token.price + " " + token.change;
+        item.onclick = () => {
+            addMessage("System", token.name + " (" + token.symbol + "): " + token.price + " " + token.change, "system");
+        };
+        tokenList.appendChild(item);
+    });
+}
+
+function searchTokens(query) {
+    const filtered = mockTokens.filter(token => 
+        token.name.toLowerCase().includes(query.toLowerCase()) ||
+        token.symbol.toLowerCase().includes(query.toLowerCase())
+    );
+    
+    const tokenList = document.getElementById("token-list");
+    tokenList.innerHTML = "";
+    
+    filtered.forEach(token => {
+        const item = document.createElement("div");
+        item.className = "token-item";
+        item.innerHTML = token.symbol + " - " + token.name + " " + token.price;
+        tokenList.appendChild(item);
+    });
+}
+
+function addWallet() {
+    const input = document.getElementById("wallet-input");
+    const address = input.value.trim();
+    
+    if (!address) {
+        addMessage("System", "Please enter a wallet address", "system");
+        return;
+    }
+    
+    addMessage("System", "Now tracking wallet: " + address.substring(0, 8) + "...", "system");
+    input.value = "";
+}
+
+function initSocket() {
+    socket = io(window.location.origin, {
+        transports: ["polling"],
+        upgrade: false
+    });
+
+    socket.on("connect", () => {
+        console.log("Connected:", socket.id);
+        isConnected = true;
+        document.getElementById("status").textContent = "Connected";
+        document.getElementById("status").className = "status connected";
+        
+        if (userName === "Guest") {
+            addMessage("CrackerBot", "Welcome, Guest! What is your cosmic name?", "bot");
+            currentTask = { step: "name" };
+        } else {
+            addMessage("CrackerBot", "Welcome back, " + userName + "! Choose your path:", "bot");
+            showOptions(["Chat", "Build-Something-Epic"]);
+            currentTask = { step: "choice" };
+        }
+    });
+
+    socket.on("disconnect", () => {
+        isConnected = false;
+        document.getElementById("status").textContent = "Disconnected";
+        document.getElementById("status").className = "status disconnected";
+    });
+}
+
+function addMessage(from, text, type) {
+    const messagesDiv = document.getElementById("messages");
+    const messageDiv = document.createElement("div");
+    messageDiv.className = "message " + type + "-message";
+    messageDiv.innerHTML = "<strong>" + from + ":</strong> " + text;
+    messagesDiv.appendChild(messageDiv);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    
+    messageHistory.push({ from, text, type, time: new Date().toLocaleTimeString() });
+}
+
+function showOptions(options) {
+    const messagesDiv = document.getElementById("messages");
+    const optionsDiv = document.createElement("div");
+    optionsDiv.className = "message system-message";
+    optionsDiv.innerHTML = "<strong>Options:</strong><br>";
+    
+    options.forEach(option => {
+        const btn = document.createElement("button");
+        btn.className = "btn";
+        btn.textContent = option;
+        btn.onclick = () => handleOption(option);
+        btn.style.margin = "5px";
+        optionsDiv.appendChild(btn);
+    });
+    
+    messagesDiv.appendChild(optionsDiv);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
+}
+
+function handleOption(option) {
+    addMessage("You", option, "user");
+    
+    if (option === "Chat") {
+        currentTask = { step: "chat" };
+        addMessage("CrackerBot", "Chat mode activated! What would you like to talk about?", "bot");
+    } else if (option === "Build-Something-Epic") {
+        currentTask = { step: "project_name" };
+        addMessage("CrackerBot", "Let us build something epic! What shall we name your project?", "bot");
+    }
+}
+
+function handleInput(value) {
+    const dropdown = document.getElementById("commands-dropdown");
+    
+    if (value.startsWith("/")) {
+        const query = value.toLowerCase();
+        const filtered = commands.filter(cmd => 
+            cmd.command.toLowerCase().startsWith(query)
+        );
+        
+        if (filtered.length > 0) {
+            dropdown.innerHTML = "";
+            filtered.forEach((cmd, idx) => {
+                const item = document.createElement("div");
+                item.className = "command-item";
+                if (idx === commandIndex) item.classList.add("selected");
+                item.innerHTML = cmd.command + " - " + cmd.description;
+                item.onclick = () => {
+                    document.getElementById("input").value = cmd.command + " ";
+                    dropdown.classList.remove("show");
+                };
+                dropdown.appendChild(item);
+            });
+            dropdown.classList.add("show");
+        } else {
+            dropdown.classList.remove("show");
+        }
+    } else {
+        dropdown.classList.remove("show");
+        commandIndex = -1;
+    }
+}
+
+function handleKeyDown(event) {
+    const dropdown = document.getElementById("commands-dropdown");
+    const items = dropdown.querySelectorAll(".command-item");
+    
+    if (dropdown.classList.contains("show") && items.length > 0) {
+        if (event.key === "ArrowUp") {
+            event.preventDefault();
+            commandIndex = Math.max(0, commandIndex - 1);
+            updateCommandSelection(items);
+        } else if (event.key === "ArrowDown") {
+            event.preventDefault();
+            commandIndex = Math.min(items.length - 1, commandIndex + 1);
+            updateCommandSelection(items);
+        } else if (event.key === "Tab") {
+            event.preventDefault();
+            if (commandIndex >= 0 && items[commandIndex]) {
+                items[commandIndex].click();
+            }
+        }
+    }
+}
+
+function updateCommandSelection(items) {
+    items.forEach((item, idx) => {
+        if (idx === commandIndex) {
+            item.classList.add("selected");
+        } else {
+            item.classList.remove("selected");
+        }
+    });
+}
+
+function handleKeyPress(event) {
+    if (event.key === "Enter") {
+        sendMessage();
+    }
+}
+
+function sendMessage() {
+    const input = document.getElementById("input");
+    const text = input.value.trim();
+    if (!text) return;
+
+    document.getElementById("commands-dropdown").classList.remove("show");
+    
+    addMessage("You", text, "user");
+    input.value = "";
+
+    if (text.startsWith("/")) {
+        processCommand(text);
+        return;
+    }
+
+    if (currentTask) {
+        if (currentTask.step === "name") {
+            userName = text;
+            localStorage.setItem("crackerBotUserName", text);
+            addMessage("CrackerBot", "Welcome, " + userName + "! Choose your cosmic path:", "bot");
+            showOptions(["Chat", "Build-Something-Epic"]);
+            currentTask = { step: "choice" };
+        } else if (currentTask.step === "project_name") {
+            currentTask.projectName = text;
+            currentTask.step = "project_type";
+            addMessage("CrackerBot", text + " - Epic name! What type of project?", "bot");
+        } else if (currentTask.step === "project_type") {
+            currentTask.projectType = text;
+            currentTask.step = "features";
+            addMessage("CrackerBot", "A " + text + "! What features should it have?", "bot");
+        } else if (currentTask.step === "features") {
+            currentTask.features = text;
+            addMessage("CrackerBot", "Building " + currentTask.projectName + "...", "bot");
+            simulateBuild();
+        } else {
+            setTimeout(() => {
+                addMessage("CrackerBot", "That is fascinating! Tell me more about that.", "bot");
+            }, 1000);
+        }
+    }
+}
+
+function processCommand(command) {
+    const cmd = command.split(" ")[0].toLowerCase();
+    
+    if (cmd === "/clear") {
+        document.getElementById("messages").innerHTML = "";
+        addMessage("System", "Chat cleared!", "system");
+    } else if (cmd === "/warp_reconnect") {
+        warpReconnect();
+    } else if (cmd === "/guide" || cmd === "/help") {
+        const helpText = commands.map(c => c.command + " - " + c.description).join("\\n");
+        addMessage("System", "Commands:\\n" + helpText, "system");
+    } else {
+        addMessage("System", "Unknown command: " + cmd, "system");
+    }
+}
+
+function simulateBuild() {
+    let progress = 0;
+    const messagesDiv = document.getElementById("messages");
+    
+    const progressContainer = document.createElement("div");
+    progressContainer.className = "progress-container";
+    progressContainer.innerHTML = 
+        "<div>Building...</div>" +
+        "<div class=\\"progress-bar\\">" +
+        "<div class=\\"progress-fill\\" id=\\"progress-fill\\" style=\\"width: 0%\\">0%</div>" +
+        "</div>";
+    messagesDiv.appendChild(progressContainer);
+    
+    buildInterval = setInterval(() => {
+        progress += 20;
+        if (progress >= 100) {
+            clearInterval(buildInterval);
+            document.getElementById("progress-fill").style.width = "100%";
+            document.getElementById("progress-fill").textContent = "100% Complete!";
+            addMessage("CrackerBot", currentTask.projectName + " complete!", "bot");
+            showOptions(["Download", "Refine Project", "Start New Project"]);
+        } else {
+            document.getElementById("progress-fill").style.width = progress + "%";
+            document.getElementById("progress-fill").textContent = progress + "%";
+        }
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }, 500);
+}
+
+function warpReconnect() {
+    if (!confirm("This will reset your username to Guest and clear all data. Continue?")) {
+        return;
+    }
+    
+    localStorage.removeItem("crackerBotUserName");
+    userName = "Guest";
+    currentTask = null;
+    messageHistory = [];
+    
+    document.getElementById("messages").innerHTML = "";
+    
+    if (socket) {
+        socket.disconnect();
+        setTimeout(() => initSocket(), 500);
+    }
+    
+    addMessage("System", "Warp reconnect initiated! Starting fresh...", "system");
+}
+
+function exportChat() {
+    const text = messageHistory.map(m => "[" + m.time + "] " + m.from + ": " + m.text).join("\\n");
+    const blob = new Blob([text], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "crackerbot-chat.txt";
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// Initialize on load
+window.addEventListener("load", () => {
+    initMatrixRain();
+    initSocket();
+    loadTokens();
+});

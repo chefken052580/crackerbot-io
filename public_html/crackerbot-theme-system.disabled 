@@ -1,0 +1,368 @@
+// Theme System with Matrix Rain Effect
+(function() {
+    // Matrix Rain Effect
+    class MatrixRainEffect {
+        constructor() {
+            this.canvas = null;
+            this.ctx = null;
+            this.drops = [];
+            this.fontSize = 14;
+            this.columns = 0;
+            this.isRunning = false;
+            this.animationId = null;
+            this.timeoutId = null;
+            this.fallSpeed = 0.3;
+            this.chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789@#$%^&*()アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン';
+            this.init();
+        }
+        
+        init() {
+            // Don't create canvas immediately - wait until needed
+            if (!this.canvas) {
+                this.canvas = document.getElementById('matrix-rain-canvas');
+                if (!this.canvas) {
+                    this.canvas = document.createElement('canvas');
+                    this.canvas.id = 'matrix-rain-canvas';
+                    this.canvas.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:1;opacity:0;transition:opacity 0.5s ease;display:none;'; // Added display:none
+                    document.body.insertBefore(this.canvas, document.body.firstChild);
+                }
+            }
+            
+            this.ctx = this.canvas.getContext('2d');
+            this.resize();
+            window.addEventListener('resize', () => this.resize());
+        }
+        
+        resize() {
+            if (!this.canvas) return;
+            this.canvas.width = window.innerWidth;
+            this.canvas.height = window.innerHeight;
+            this.columns = Math.floor(this.canvas.width / this.fontSize);
+            this.drops = [];
+            for (let i = 0; i < this.columns; i++) {
+                this.drops[i] = Math.random() * -100;
+            }
+        }
+        
+        start() {
+            if (this.isRunning) return;
+            console.log('[Matrix Rain] Starting...');
+            this.isRunning = true;
+            this.canvas.style.display = 'block'; // Show canvas
+            setTimeout(() => {
+                this.canvas.style.opacity = '0.15';
+            }, 10);
+            this.animate();
+        }
+        
+        stop() {
+            console.log('[Matrix Rain] Stopping...');
+            this.isRunning = false;
+            
+            // Clear animation frame
+            if (this.animationId) {
+                cancelAnimationFrame(this.animationId);
+                this.animationId = null;
+            }
+            
+            // Clear timeout
+            if (this.timeoutId) {
+                clearTimeout(this.timeoutId);
+                this.timeoutId = null;
+            }
+            
+            if (this.canvas) {
+                this.canvas.style.opacity = '0';
+                // Hide and clear canvas after fade
+                setTimeout(() => {
+                    if (this.canvas) {
+                        this.canvas.style.display = 'none'; // Hide canvas
+                        if (this.ctx) {
+                            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                        }
+                    }
+                }, 500);
+            }
+        }
+        
+        animate() {
+            // Stop if not running
+            if (!this.isRunning) {
+                return;
+            }
+            
+            if (!this.ctx) return;
+            
+            this.ctx.fillStyle = 'rgba(0, 0, 0, 0.1)';
+            this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            
+            this.ctx.fillStyle = '#00ff41';
+            this.ctx.font = this.fontSize + 'px monospace';
+            
+            for (let i = 0; i < this.drops.length; i++) {
+                const char = this.chars[Math.floor(Math.random() * this.chars.length)];
+                this.ctx.fillText(char, i * this.fontSize, this.drops[i] * this.fontSize);
+                
+                if (this.drops[i] * this.fontSize > 0 && Math.random() > 0.975) {
+                    this.ctx.fillStyle = '#ffffff';
+                    this.ctx.fillText(char, i * this.fontSize, this.drops[i] * this.fontSize);
+                    this.ctx.fillStyle = '#00ff41';
+                }
+                
+                if (this.drops[i] * this.fontSize > this.canvas.height && Math.random() > 0.95) {
+                    this.drops[i] = 0;
+                }
+                
+                this.drops[i] += this.fallSpeed;
+            }
+            
+            // Only continue if still running
+            if (this.isRunning) {
+                this.timeoutId = setTimeout(() => {
+                    if (this.isRunning) {
+                        this.animationId = requestAnimationFrame(() => this.animate());
+                    }
+                }, 50);
+            }
+        }
+    }
+    
+    // Theme System
+    window.addEventListener("DOMContentLoaded", function() {
+        let matrixRain = null;
+        
+        setTimeout(function() {
+            // Clean up existing theme buttons
+            document.querySelectorAll("[class*=theme-btn], [id*=theme-btn], #final-theme-system").forEach(function(el) {
+                if (el.parentElement && el.parentElement.id === 'final-theme-system') {
+                    el.parentElement.remove();
+                } else {
+                    el.remove();
+                }
+            });
+            
+            // Initialize Matrix Rain but don't start it
+            try {
+                matrixRain = new MatrixRainEffect();
+                window.matrixRainEffect = matrixRain;
+                // Don't start it here - only start when Matrix theme is selected
+            } catch (error) {
+                console.warn('[Matrix Rain] Could not initialize:', error);
+            }
+            
+            // Create theme container
+            var container = document.createElement("div");
+            container.id = "final-theme-system";
+            container.style.cssText = "position: fixed; top: 10px; right: 10px; z-index: 2147483647;";
+            
+            // Create theme button
+            var button = document.createElement("button");
+            button.id = "final-theme-button";
+            button.style.cssText = "background: linear-gradient(135deg, #8a2be2, #00ff88); border: none; color: white; padding: 12px 24px; cursor: pointer; border-radius: 25px; font-weight: bold; font-size: 14px; text-transform: uppercase; box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4); transition: all 0.3s ease;";
+            button.textContent = "🎨 THEME SELECTOR";
+            
+            button.onmouseenter = function() {
+                this.style.transform = "translateY(-2px)";
+                this.style.boxShadow = "0 6px 20px rgba(138, 43, 226, 0.6)";
+            };
+            button.onmouseleave = function() {
+                this.style.transform = "translateY(0)";
+                this.style.boxShadow = "0 4px 15px rgba(138, 43, 226, 0.4)";
+            };
+            
+            // Create dropdown
+            var dropdown = document.createElement("div");
+            dropdown.id = "final-theme-dropdown";
+            dropdown.style.cssText = "display: none; position: absolute; top: 100%; right: 0; margin-top: 0; background: rgba(0, 0, 0, 0.95); border: 3px solid #00ff88; border-radius: 10px; overflow: hidden; min-width: 220px; box-shadow: 0 10px 30px rgba(0, 255, 136, 0.5); backdrop-filter: blur(10px);";
+            
+            var themes = [
+                {name: "Cosmic", class: "cosmic-theme", icon: "🌌", color: "#8a2be2"},
+                {name: "Matrix", class: "matrix-theme", icon: "💻", color: "#00ff41"},
+                {name: "Cyberpunk", class: "cyberpunk-theme", icon: "🤖", color: "#ff00ff"},
+                {name: "Neon", class: "neon-theme", icon: "💜", color: "#ff006e"},
+                {name: "Minimal", class: "minimal-theme", icon: "⚪", color: "#e0e0e0"},
+                {name: "Dark", class: "dark-theme", icon: "🌑", color: "#2d2d2d"}
+            ];
+            
+            var currentTheme = localStorage.getItem("crackerBotTheme") || "cosmic";
+            
+            themes.forEach(function(theme) {
+                var item = document.createElement("button");
+                item.style.cssText = "display: flex; align-items: center; gap: 10px; width: 100%; padding: 12px 16px; background: transparent; border: none; border-bottom: 1px solid rgba(0, 255, 136, 0.2); color: #00ff88; cursor: pointer; text-align: left; font-size: 14px; font-family: monospace; transition: all 0.2s;";
+                
+                var colorDot = document.createElement("span");
+                colorDot.style.cssText = "width: 12px; height: 12px; border-radius: 50%; background: " + theme.color + "; border: 1px solid rgba(255, 255, 255, 0.3);";
+                
+                var text = document.createElement("span");
+                text.textContent = theme.icon + " " + theme.name;
+                
+                item.appendChild(colorDot);
+                item.appendChild(text);
+                
+                if (theme.name.toLowerCase() === currentTheme) {
+                    item.style.background = "rgba(0, 255, 136, 0.1)";
+                    text.textContent = theme.icon + " " + theme.name + " ✓";
+                }
+                
+                item.onmouseenter = function() {
+                    this.style.background = "rgba(0, 255, 136, 0.2)";
+                    this.style.paddingLeft = "24px";
+                };
+                item.onmouseleave = function() {
+                    if (theme.name.toLowerCase() === currentTheme) {
+                        this.style.background = "rgba(0, 255, 136, 0.1)";
+                    } else {
+                        this.style.background = "transparent";
+                    }
+                    this.style.paddingLeft = "16px";
+                };
+                
+                item.onclick = function(e) {
+                    e.stopPropagation();
+                    
+                    // Remove all theme classes
+                    document.body.className = document.body.className
+                        .split(' ')
+                        .filter(c => !themes.some(t => t.class === c))
+                        .join(' ');
+                    
+                    // Add new theme class
+                    document.body.classList.add(theme.class);
+                    
+                    // Save theme
+                    localStorage.setItem("crackerBotTheme", theme.name.toLowerCase());
+                    currentTheme = theme.name.toLowerCase();
+                    
+                    // Update button text
+                    button.textContent = theme.icon + " " + theme.name.toUpperCase();
+                    
+                    // Handle Matrix rain - ONLY for Matrix theme
+                    if (theme.name.toLowerCase() === "matrix" && matrixRain) {
+                        console.log('[Theme] Starting Matrix rain');
+                        matrixRain.start();
+                    } else if (matrixRain && matrixRain.isRunning) {
+                        console.log('[Theme] Stopping Matrix rain');
+                        matrixRain.stop();
+                    }
+                    
+                    // Update dropdown items
+                    dropdown.querySelectorAll('button').forEach(function(btn, index) {
+                        var themeData = themes[index];
+                        if (themeData && themeData.name.toLowerCase() === currentTheme) {
+                            btn.style.background = "rgba(0, 255, 136, 0.1)";
+                            btn.querySelector('span:last-child').textContent = themeData.icon + " " + themeData.name + " ✓";
+                        } else if (themeData) {
+                            btn.style.background = "transparent";
+                            btn.querySelector('span:last-child').textContent = themeData.icon + " " + themeData.name;
+                        }
+                    });
+                    
+                    dropdown.style.display = "none";
+                    
+                    window.dispatchEvent(new CustomEvent('themeChanged', { 
+                        detail: { theme: theme.name.toLowerCase() } 
+                    }));
+                };
+                
+                dropdown.appendChild(item);
+            });
+            
+            if (dropdown.lastChild) {
+                dropdown.lastChild.style.borderBottom = "none";
+            }
+            
+            container.appendChild(button);
+            container.appendChild(dropdown);
+            document.body.appendChild(container);
+            
+            // Mouse hover handlers
+            var mouseOverButton = false;
+            var mouseOverDropdown = false;
+            var closeTimeout = null;
+            
+            function clearCloseTimeout() {
+                if (closeTimeout) {
+                    clearTimeout(closeTimeout);
+                    closeTimeout = null;
+                }
+            }
+            
+            function scheduleClose() {
+                clearCloseTimeout();
+                closeTimeout = setTimeout(function() {
+                    if (!mouseOverButton && !mouseOverDropdown) {
+                        dropdown.style.display = "none";
+                    }
+                }, 300);
+            }
+            
+            button.onmouseenter = function() {
+                mouseOverButton = true;
+                clearCloseTimeout();
+                setTimeout(function() {
+                    if (mouseOverButton) {
+                        dropdown.style.display = "block";
+                    }
+                }, 200);
+            };
+            
+            button.onmouseleave = function(e) {
+                mouseOverButton = false;
+                if (!dropdown.contains(e.relatedTarget)) {
+                    scheduleClose();
+                }
+            };
+            
+            dropdown.onmouseenter = function() {
+                mouseOverDropdown = true;
+                clearCloseTimeout();
+            };
+            
+            dropdown.onmouseleave = function(e) {
+                mouseOverDropdown = false;
+                if (!button.contains(e.relatedTarget)) {
+                    scheduleClose();
+                }
+            };
+            
+            button.onclick = function(e) {
+                e.stopPropagation();
+                dropdown.style.display = dropdown.style.display === "none" ? "block" : "none";
+            };
+            
+            document.addEventListener("click", function(e) {
+                if (!container.contains(e.target)) {
+                    dropdown.style.display = "none";
+                }
+            });
+            
+            // Load saved theme
+            var savedTheme = themes.find(function(t) {
+                return t.name.toLowerCase() === currentTheme;
+            });
+            
+            if (savedTheme) {
+                document.body.className = document.body.className
+                        .split(' ')
+                        .filter(c => !themes.some(t => t.class === c))
+                        .join(' ');
+                
+                document.body.classList.add(savedTheme.class);
+                button.textContent = savedTheme.icon + " " + savedTheme.name.toUpperCase();
+                
+                // ONLY start Matrix rain if saved theme is Matrix
+                if (savedTheme.name.toLowerCase() === "matrix" && matrixRain) {
+                    console.log('[Theme] Saved theme is Matrix, starting rain');
+                    setTimeout(function() {
+                        matrixRain.start();
+                    }, 100);
+                } else {
+                    console.log('[Theme] Saved theme is', savedTheme.name, '- no Matrix rain');
+                }
+            }
+            
+            console.log("[Theme] ✅ Theme system ready!");
+            
+        }, 1500);
+    });
+})();

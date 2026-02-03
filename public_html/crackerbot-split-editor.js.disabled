@@ -1,0 +1,569 @@
+// Split-Screen AI Editor with Live Preview
+(function() {
+    console.log('[Split Screen Editor] Initializing...');
+    
+    // Create the enhanced split-screen editor
+    window.forceOpenAIEditor = function(project) {
+        console.log('[Split Screen Editor] Opening editor for:', project?.projectName);
+        
+        // Hide theme button when editor opens
+        const themeSystem = document.getElementById('final-theme-system');
+        if (themeSystem) {
+            themeSystem.style.display = 'none';
+        }
+        
+        // Remove any existing editor
+        const existing = document.getElementById('ai-editor-modal');
+        if (existing) existing.remove();
+        
+        // Ensure we have a project
+        if (!project || !project.files) {
+            console.error('[Split Screen Editor] No valid project');
+            alert('No project files found to edit!');
+            return;
+        }
+        
+        // Get files
+        const files = project.files || {};
+        const fileNames = Object.keys(files);
+        
+        if (fileNames.length === 0) {
+            alert('Project has no files to edit!');
+            return;
+        }
+        
+        const firstFile = fileNames[0];
+        window.currentEditFile = firstFile;
+        
+        // Create modal using DOM methods
+        const modal = document.createElement('div');
+        modal.id = 'ai-editor-modal';
+        modal.style.position = 'fixed';
+        modal.style.top = '0';
+        modal.style.left = '0';
+        modal.style.right = '0';
+        modal.style.bottom = '0';
+        modal.style.background = '#0a0a0a';
+        modal.style.zIndex = '999999';
+        modal.style.display = 'flex';
+        modal.style.flexDirection = 'column';
+        
+        // Create header
+        const header = document.createElement('div');
+        header.style.background = 'linear-gradient(135deg, #1a1a2e, #2d2d44)';
+        header.style.borderBottom = '2px solid #00ff88';
+        header.style.padding = '15px';
+        header.style.display = 'flex';
+        header.style.justifyContent = 'space-between';
+        header.style.alignItems = 'center';
+        
+        const title = document.createElement('h2');
+        title.style.color = '#00ff88';
+        title.style.margin = '0';
+        title.style.fontSize = '20px';
+        title.textContent = '🤖 AI Editor - ' + (project.projectName || 'Untitled');
+        header.appendChild(title);
+        
+        // Create button container
+        const buttonContainer = document.createElement('div');
+        buttonContainer.style.display = 'flex';
+        buttonContainer.style.gap = '10px';
+        buttonContainer.style.alignItems = 'center';
+        
+        // View buttons
+        const viewButtons = document.createElement('div');
+        viewButtons.style.display = 'flex';
+        viewButtons.style.gap = '5px';
+        viewButtons.style.background = 'rgba(0,0,0,0.5)';
+        viewButtons.style.padding = '5px';
+        viewButtons.style.borderRadius = '5px';
+        
+        const splitBtn = createButton('⬌ Split', function() { setEditorView('split'); });
+        splitBtn.id = 'view-split-btn';
+        splitBtn.style.background = '#00ff88';
+        splitBtn.style.color = '#000';
+        
+        const codeBtn = createButton('</> Code', function() { setEditorView('code'); });
+        codeBtn.id = 'view-code-btn';
+        
+        const previewBtn = createButton('👁️ Preview', function() { setEditorView('preview'); });
+        previewBtn.id = 'view-preview-btn';
+        
+        viewButtons.appendChild(splitBtn);
+        viewButtons.appendChild(codeBtn);
+        viewButtons.appendChild(previewBtn);
+        
+        // Action buttons
+        const refreshBtn = createButton('🔄 Refresh', refreshPreview);
+        refreshBtn.style.background = '#00ccff';
+        refreshBtn.style.color = '#000';
+        
+        const saveBtn = createButton('💾 Save', saveEditorChanges);
+        saveBtn.style.background = '#00ff88';
+        saveBtn.style.color = '#000';
+        
+        const closeBtn = createButton('✕ Close', closeAIEditor);
+        closeBtn.style.background = '#ff4444';
+        closeBtn.style.color = 'white';
+        
+        buttonContainer.appendChild(viewButtons);
+        buttonContainer.appendChild(refreshBtn);
+        buttonContainer.appendChild(saveBtn);
+        buttonContainer.appendChild(closeBtn);
+        header.appendChild(buttonContainer);
+        
+        // Create main content area
+        const mainContent = document.createElement('div');
+        mainContent.id = 'editor-main-content';
+        mainContent.style.display = 'flex';
+        mainContent.style.flex = '1';
+        mainContent.style.overflow = 'hidden';
+        mainContent.style.background = '#0a0a0a';
+        
+        // Create code panel
+        const codePanel = document.createElement('div');
+        codePanel.id = 'code-panel';
+        codePanel.style.display = 'flex';
+        codePanel.style.flex = '1';
+        codePanel.style.minWidth = '0';
+        
+        // File list
+        const fileList = document.createElement('div');
+        fileList.style.width = '180px';
+        fileList.style.background = '#1a1a2e';
+        fileList.style.borderRight = '1px solid #00ff88';
+        fileList.style.overflowY = 'auto';
+        fileList.style.padding = '10px';
+        fileList.style.flexShrink = '0';
+        
+        const filesTitle = document.createElement('h3');
+        filesTitle.style.color = '#00ff88';
+        filesTitle.style.fontSize = '14px';
+        filesTitle.style.margin = '0 0 10px 0';
+        filesTitle.textContent = 'FILES';
+        fileList.appendChild(filesTitle);
+        
+        // Add file items
+        fileNames.forEach(function(name) {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'editor-file-item';
+            fileItem.setAttribute('data-filename', name);
+            fileItem.style.padding = '8px';
+            fileItem.style.color = name === firstFile ? '#00ff88' : '#888';
+            fileItem.style.cursor = 'pointer';
+            fileItem.style.fontFamily = 'monospace';
+            fileItem.style.fontSize = '12px';
+            fileItem.style.background = name === firstFile ? 'rgba(0,255,136,0.1)' : 'transparent';
+            fileItem.style.borderRadius = '5px';
+            fileItem.style.marginBottom = '5px';
+            fileItem.style.transition = 'all 0.2s';
+            fileItem.textContent = '📄 ' + name;
+            fileItem.onclick = function() { switchEditorFile(name); };
+            fileList.appendChild(fileItem);
+        });
+        
+        codePanel.appendChild(fileList);
+        
+        // Code editor area
+        const editorArea = document.createElement('div');
+        editorArea.style.flex = '1';
+        editorArea.style.display = 'flex';
+        editorArea.style.flexDirection = 'column';
+        editorArea.style.padding = '15px';
+        editorArea.style.minWidth = '0';
+        
+        // AI prompt bar
+        const promptBar = document.createElement('div');
+        promptBar.style.display = 'flex';
+        promptBar.style.gap = '10px';
+        promptBar.style.marginBottom = '10px';
+        
+        const promptInput = document.createElement('input');
+        promptInput.id = 'ai-prompt-input';
+        promptInput.type = 'text';
+        promptInput.placeholder = 'Tell AI what to modify...';
+        promptInput.style.flex = '1';
+        promptInput.style.padding = '8px';
+        promptInput.style.background = 'rgba(0,0,0,0.5)';
+        promptInput.style.border = '1px solid #00ff88';
+        promptInput.style.color = '#00ff88';
+        promptInput.style.borderRadius = '5px';
+        promptInput.style.fontFamily = 'monospace';
+        promptInput.style.fontSize = '13px';
+        
+        const aiButton = createButton('✨ Apply AI', applyAIEdit);
+        aiButton.style.background = 'linear-gradient(135deg, #00ff88, #00ccff)';
+        aiButton.style.color = '#000';
+        
+        promptBar.appendChild(promptInput);
+        promptBar.appendChild(aiButton);
+        editorArea.appendChild(promptBar);
+        
+        // Code display
+        const codeDisplay = document.createElement('div');
+        codeDisplay.style.background = '#000';
+        codeDisplay.style.border = '1px solid #00ff88';
+        codeDisplay.style.borderRadius = '5px';
+        codeDisplay.style.padding = '10px';
+        codeDisplay.style.flex = '1';
+        codeDisplay.style.display = 'flex';
+        codeDisplay.style.flexDirection = 'column';
+        codeDisplay.style.minHeight = '0';
+        
+        const fileLabel = document.createElement('div');
+        fileLabel.style.color = '#00ff88';
+        fileLabel.style.fontSize = '12px';
+        fileLabel.style.marginBottom = '10px';
+        fileLabel.innerHTML = 'Editing: <span id="current-file-display">' + firstFile + '</span>';
+        codeDisplay.appendChild(fileLabel);
+        
+        const textarea = document.createElement('textarea');
+        textarea.id = 'code-editor-textarea';
+        textarea.style.width = '100%';
+        textarea.style.flex = '1';
+        textarea.style.background = '#000';
+        textarea.style.color = '#00ff88';
+        textarea.style.border = 'none';
+        textarea.style.fontFamily = 'monospace';
+        textarea.style.fontSize = '13px';
+        textarea.style.resize = 'none';
+        textarea.style.outline = 'none';
+        textarea.style.padding = '10px';
+        textarea.style.lineHeight = '1.5';
+        textarea.spellcheck = false;
+        textarea.value = files[firstFile] || '// Empty file';
+        codeDisplay.appendChild(textarea);
+        
+        editorArea.appendChild(codeDisplay);
+        codePanel.appendChild(editorArea);
+        
+        // Resizer
+        const resizer = document.createElement('div');
+        resizer.id = 'editor-resizer';
+        resizer.style.width = '5px';
+        resizer.style.background = '#00ff88';
+        resizer.style.cursor = 'col-resize';
+        resizer.style.position = 'relative';
+        resizer.style.flexShrink = '0';
+        
+        const resizerIcon = document.createElement('div');
+        resizerIcon.style.position = 'absolute';
+        resizerIcon.style.top = '50%';
+        resizerIcon.style.left = '50%';
+        resizerIcon.style.transform = 'translate(-50%, -50%)';
+        resizerIcon.style.color = '#000';
+        resizerIcon.style.fontWeight = 'bold';
+        resizerIcon.style.userSelect = 'none';
+        resizerIcon.textContent = '⋮';
+        resizer.appendChild(resizerIcon);
+        
+        // Preview panel
+        const previewPanel = document.createElement('div');
+        previewPanel.id = 'preview-panel';
+        previewPanel.style.flex = '1';
+        previewPanel.style.display = 'flex';
+        previewPanel.style.flexDirection = 'column';
+        previewPanel.style.background = '#fff';
+        previewPanel.style.minWidth = '0';
+        
+        const previewHeader = document.createElement('div');
+        previewHeader.style.background = '#1a1a2e';
+        previewHeader.style.padding = '10px';
+        previewHeader.style.borderBottom = '1px solid #00ff88';
+        previewHeader.style.display = 'flex';
+        previewHeader.style.justifyContent = 'space-between';
+        previewHeader.style.alignItems = 'center';
+        
+        const previewTitle = document.createElement('span');
+        previewTitle.style.color = '#00ff88';
+        previewTitle.style.fontSize = '14px';
+        previewTitle.style.fontWeight = 'bold';
+        previewTitle.textContent = '🌐 Live Preview';
+        previewHeader.appendChild(previewTitle);
+        
+        const previewInfo = document.createElement('span');
+        previewInfo.style.color = '#888';
+        previewInfo.style.fontSize = '12px';
+        previewInfo.textContent = 'Auto-refresh on save';
+        previewHeader.appendChild(previewInfo);
+        
+        previewPanel.appendChild(previewHeader);
+        
+        const iframe = document.createElement('iframe');
+        iframe.id = 'preview-iframe';
+        iframe.style.flex = '1';
+        iframe.style.width = '100%';
+        iframe.style.border = 'none';
+        iframe.style.background = 'white';
+        iframe.sandbox = 'allow-scripts allow-same-origin allow-forms';
+        previewPanel.appendChild(iframe);
+        
+        // Assemble everything
+        mainContent.appendChild(codePanel);
+        mainContent.appendChild(resizer);
+        mainContent.appendChild(previewPanel);
+        
+        modal.appendChild(header);
+        modal.appendChild(mainContent);
+        
+        document.body.appendChild(modal);
+        
+        // Initialize
+        updatePreview();
+        setupResizer();
+        setupAutoSave();
+        
+        console.log('[Split Screen Editor] Editor opened successfully');
+    };
+    
+    // Helper function to create buttons
+    function createButton(text, onclick) {
+        const btn = document.createElement('button');
+        btn.textContent = text;
+        btn.onclick = onclick;
+        btn.style.border = 'none';
+        btn.style.padding = '10px 20px';
+        btn.style.borderRadius = '5px';
+        btn.style.cursor = 'pointer';
+        btn.style.fontWeight = 'bold';
+        return btn;
+    }
+    
+    // Global functions
+    window.switchEditorFile = function(filename) {
+        const textarea = document.getElementById('code-editor-textarea');
+        if (textarea && window.currentEditFile && window.currentTask) {
+            window.currentTask.files[window.currentEditFile] = textarea.value;
+        }
+        
+        window.currentEditFile = filename;
+        
+        if (textarea && window.currentTask && window.currentTask.files) {
+            textarea.value = window.currentTask.files[filename] || '// Empty file';
+        }
+        
+        const display = document.getElementById('current-file-display');
+        if (display) {
+            display.textContent = filename;
+        }
+        
+        const fileItems = document.querySelectorAll('.editor-file-item');
+        fileItems.forEach(function(item) {
+            const itemFilename = item.getAttribute('data-filename');
+            if (itemFilename === filename) {
+                item.style.color = '#00ff88';
+                item.style.background = 'rgba(0,255,136,0.1)';
+            } else {
+                item.style.color = '#888';
+                item.style.background = 'transparent';
+            }
+        });
+        
+        if (filename.endsWith('.html')) {
+            setTimeout(updatePreview, 100);
+        }
+    };
+    
+    window.setEditorView = function(view) {
+        const codePanel = document.getElementById('code-panel');
+        const previewPanel = document.getElementById('preview-panel');
+        const resizer = document.getElementById('editor-resizer');
+        
+        if (view === 'code') {
+            codePanel.style.display = 'flex';
+            codePanel.style.flex = '1';
+            previewPanel.style.display = 'none';
+            resizer.style.display = 'none';
+        } else if (view === 'preview') {
+            codePanel.style.display = 'none';
+            previewPanel.style.display = 'flex';
+            previewPanel.style.flex = '1';
+            resizer.style.display = 'none';
+        } else {
+            codePanel.style.display = 'flex';
+            codePanel.style.flex = '1';
+            previewPanel.style.display = 'flex';
+            previewPanel.style.flex = '1';
+            resizer.style.display = 'block';
+        }
+    };
+    
+    window.refreshPreview = function() {
+        const textarea = document.getElementById('code-editor-textarea');
+        if (textarea && window.currentEditFile && window.currentTask) {
+            window.currentTask.files[window.currentEditFile] = textarea.value;
+        }
+        updatePreview();
+    };
+    
+    window.closeAIEditor = function() {
+        const modal = document.getElementById('ai-editor-modal');
+        if (modal) modal.remove();
+        
+        // Show theme button again when editor closes
+        const themeSystem = document.getElementById('final-theme-system');
+        if (themeSystem) {
+            themeSystem.style.display = 'block';
+        }
+    };
+    
+    window.saveEditorChanges = function() {
+        const textarea = document.getElementById('code-editor-textarea');
+        if (textarea && window.currentEditFile && window.currentTask) {
+            window.currentTask.files[window.currentEditFile] = textarea.value;
+        }
+        
+        updatePreview();
+        
+        if (window.currentEditingIndex !== undefined) {
+            projects[window.currentEditingIndex] = window.currentTask;
+            
+            if (window.addMessage) {
+                window.addMessage("System", "✅ Project saved!", "system");
+            }
+        }
+    };
+    
+    window.applyAIEdit = function() {
+        const prompt = document.getElementById('ai-prompt-input').value.trim();
+        if (!prompt) {
+            alert('Please enter what you want AI to modify');
+            return;
+        }
+        
+        const textarea = document.getElementById('code-editor-textarea');
+        const currentCode = textarea.value;
+        
+        if (!window.socket || !window.socket.connected) {
+            alert('Not connected to backend. Please configure backend connection first.');
+            return;
+        }
+        
+        window.socket.emit('modify_code', {
+            filename: window.currentEditFile,
+            code: currentCode,
+            prompt: prompt,
+            projectType: window.currentTask.projectType || 'web-app',
+            projectName: window.currentTask.projectName
+        });
+        
+        const promptInput = document.getElementById('ai-prompt-input');
+        promptInput.value = 'AI is working...';
+        promptInput.disabled = true;
+        
+        window.socket.once('code_modified', function(data) {
+            if (data.code) {
+                textarea.value = data.code;
+                if (window.currentTask && window.currentTask.files) {
+                    window.currentTask.files[window.currentEditFile] = data.code;
+                }
+                updatePreview();
+            }
+            promptInput.value = '';
+            promptInput.disabled = false;
+            promptInput.placeholder = 'AI modification applied! Enter next change...';
+        });
+    };
+    
+    function updatePreview() {
+        const iframe = document.getElementById('preview-iframe');
+        if (!iframe || !window.currentTask || !window.currentTask.files) return;
+        
+        let htmlFile = null;
+        const fileKeys = Object.keys(window.currentTask.files);
+        for (let i = 0; i < fileKeys.length; i++) {
+            if (fileKeys[i].endsWith('.html')) {
+                htmlFile = fileKeys[i];
+                break;
+            }
+        }
+        if (!htmlFile) htmlFile = 'index.html';
+        
+        let htmlContent = window.currentTask.files[htmlFile] || '<h1>No HTML file found</h1>';
+        
+        const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        iframeDoc.open();
+        iframeDoc.write(htmlContent);
+        iframeDoc.close();
+    }
+    
+    function setupResizer() {
+        const resizer = document.getElementById('editor-resizer');
+        const codePanel = document.getElementById('code-panel');
+        const previewPanel = document.getElementById('preview-panel');
+        
+        let isResizing = false;
+        
+        resizer.addEventListener('mousedown', function(e) {
+            isResizing = true;
+            document.body.style.cursor = 'col-resize';
+            e.preventDefault();
+        });
+        
+        document.addEventListener('mousemove', function(e) {
+            if (!isResizing) return;
+            
+            const containerWidth = document.getElementById('editor-main-content').offsetWidth;
+            const newCodeWidth = e.clientX - 180;
+            const percentage = (newCodeWidth / containerWidth) * 100;
+            
+            if (percentage > 20 && percentage < 80) {
+                codePanel.style.flex = '0 0 ' + percentage + '%';
+                previewPanel.style.flex = '0 0 ' + (100 - percentage) + '%';
+            }
+        });
+        
+        document.addEventListener('mouseup', function() {
+            isResizing = false;
+            document.body.style.cursor = 'default';
+        });
+    }
+    
+    function setupAutoSave() {
+        let saveTimeout;
+        const textarea = document.getElementById('code-editor-textarea');
+        if (textarea) {
+            textarea.addEventListener('input', function() {
+                clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(function() {
+                    if (window.currentTask && window.currentTask.files) {
+                        window.currentTask.files[window.currentEditFile] = textarea.value;
+                        updatePreview();
+                    }
+                }, 1000);
+            });
+        }
+    }
+    
+    // Override loadProject
+    window.loadProject = function(index) {
+        const project = projects[index];
+        
+        if (!project) return;
+        
+        window.currentTask = project;
+        window.currentEditingIndex = index;
+        
+        const manager = document.getElementById('projects-manager');
+        if (manager) manager.remove();
+        
+        if (window.addMessage) {
+            window.addMessage("System", '📝 Loading "' + project.projectName + '" in AI Editor...', "system");
+        }
+        
+        setTimeout(function() {
+            window.forceOpenAIEditor(project);
+        }, 100);
+    };
+    
+    window.editWithAI = function() {
+        if (!window.currentTask || !window.currentTask.files) {
+            alert('No project loaded to edit!');
+            return;
+        }
+        
+        window.forceOpenAIEditor(window.currentTask);
+    };
+    
+    console.log('[Split Screen Editor] Ready!');
+})();

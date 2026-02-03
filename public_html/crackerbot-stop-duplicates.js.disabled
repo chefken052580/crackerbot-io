@@ -1,0 +1,85 @@
+// AGGRESSIVE DUPLICATE PREVENTION
+
+(function() {
+    console.log("🛡️ Loading duplicate prevention...");
+    
+    // Track ALL function calls
+    const callTracker = new Map();
+    const COOLDOWN = 2000; // 2 second cooldown
+    
+    // Generic function wrapper to prevent duplicates
+    function wrapFunction(name, fn) {
+        return function(...args) {
+            const now = Date.now();
+            const lastCall = callTracker.get(name) || 0;
+            
+            if (now - lastCall < COOLDOWN) {
+                console.log(`❌ Blocked duplicate ${name} (${now - lastCall}ms since last call)`);
+                return;
+            }
+            
+            callTracker.set(name, now);
+            console.log(`✅ Allowing ${name}`);
+            return fn.apply(this, args);
+        };
+    }
+    
+    // Wait for functions to be defined, then wrap them
+    const wrapWhenReady = setInterval(() => {
+        // Wrap showMainChoice
+        if (window.showMainChoice && !window.showMainChoice._wrapped) {
+            window.showMainChoice = wrapFunction("showMainChoice", window.showMainChoice);
+            window.showMainChoice._wrapped = true;
+            console.log("Wrapped showMainChoice");
+        }
+        
+        // Wrap addMessage
+        if (window.addMessage && !window.addMessage._wrapped) {
+            const original = window.addMessage;
+            window.addMessage = function(sender, text, type) {
+                const key = `${sender}:${text.substring(0, 40)}`;
+                const now = Date.now();
+                const lastCall = callTracker.get(key) || 0;
+                
+                if (now - lastCall < 1000) { // 1 second for messages
+                    console.log(`❌ Blocked duplicate message: ${key}`);
+                    return;
+                }
+                
+                callTracker.set(key, now);
+                return original.apply(this, arguments);
+            };
+            window.addMessage._wrapped = true;
+            console.log("Wrapped addMessage");
+        }
+        
+        // Stop checking after 3 seconds
+        setTimeout(() => clearInterval(wrapWhenReady), 3000);
+    }, 100);
+    
+    // Also prevent duplicate DOM ready handlers
+    let domInitialized = false;
+    const originalAddEventListener = EventTarget.prototype.addEventListener;
+    EventTarget.prototype.addEventListener = function(type, listener, options) {
+        if (type === "DOMContentLoaded" && this === document) {
+            if (domInitialized) {
+                console.log("❌ Blocked duplicate DOMContentLoaded listener");
+                return;
+            }
+            
+            // Wrap the listener
+            const wrappedListener = function(e) {
+                if (!domInitialized) {
+                    domInitialized = true;
+                    listener.call(this, e);
+                }
+            };
+            
+            return originalAddEventListener.call(this, type, wrappedListener, options);
+        }
+        
+        return originalAddEventListener.call(this, type, listener, options);
+    };
+    
+    console.log("🛡️ Duplicate prevention active");
+})();

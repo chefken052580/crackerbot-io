@@ -1,0 +1,161 @@
+/* Layout fixes for proper scrolling */
+.app-container {
+    position: relative;
+    z-index: 2;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.main-content {
+    display: flex;
+    height: calc(100vh - 60px);
+    padding-top: 60px;
+    overflow: hidden;
+}
+
+.chat-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    gap: 20px;
+    overflow: hidden;
+    min-height: 0;
+}
+
+.chat-container {
+    background: rgba(0,0,0,0.9);
+    border: 2px solid var(--matrix-green);
+    border-radius: 20px;
+    padding: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 30px rgba(0,255,133,0.2);
+    min-height: 0;
+    overflow: hidden;
+}
+
+#messages {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: rgba(0,15,0,0.8);
+    border: 1px solid var(--matrix-green);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+    font-family: monospace;
+    min-height: 200px;
+    max-height: calc(100vh - 400px);
+}
+
+/* Keep input area at bottom */
+.input-wrapper {
+    position: relative;
+    flex-shrink: 0;
+    margin-top: auto;
+}
+
+.task-pending {
+    flex-shrink: 0;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+/* Theme fixes */
+body.neon-theme {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    color: #00ffcc;
+}
+
+body.neon-theme .header {
+    border-color: #00ffcc;
+}
+
+body.neon-theme #messages {
+    background: rgba(26, 26, 46, 0.8);
+    border-color: #00ffcc;
+}
+
+body.neon-theme .chat-container {
+    border-color: #00ffcc;
+}
+
+body.neon-theme #input {
+    border-color: #00ffcc;
+    color: #00ffcc;
+}
+
+body.cyberpunk-theme {
+    background: linear-gradient(135deg, #2d1b69 0%, #0f0c29 100%);
+    color: #ff00cc;
+}
+
+body.cyberpunk-theme .header {
+    border-color: #ff00cc;
+}
+
+body.cyberpunk-theme #messages {
+    background: rgba(45, 27, 105, 0.8);
+    border-color: #ff00cc;
+}
+
+body.cyberpunk-theme .chat-container {
+    border-color: #ff00cc;
+}
+
+body.cyberpunk-theme #input {
+    border-color: #ff00cc;
+    color: #ff00cc;
+}
+
+body.retro-theme {
+    background: linear-gradient(135deg, #8b4513 0%, #d2691e 100%);
+    color: #ffd700;
+}
+
+body.retro-theme .header {
+    border-color: #ffd700;
+}
+
+body.retro-theme #messages {
+    background: rgba(139, 69, 19, 0.8);
+    border-color: #ffd700;
+}
+
+body.retro-theme .chat-container {
+    border-color: #ffd700;
+}
+
+body.retro-theme #input {
+    border-color: #ffd700;
+    color: #ffd700;
+}
+
+body.pastel-theme {
+    background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+    color: #2d3436;
+}
+
+body.pastel-theme .header {
+    border-color: #ff7675;
+    color: #2d3436;
+}
+
+body.pastel-theme #messages {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: #ff7675;
+}
+
+body.pastel-theme .chat-container {
+    border-color: #ff7675;
+}
+
+body.pastel-theme #input {
+    border-color: #ff7675;
+    color: #2d3436;
+    background: rgba(255, 255, 255, 0.9);
+}

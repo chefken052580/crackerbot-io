@@ -1,0 +1,65 @@
+// Preview AI Handler - Connects to Pure Claude
+
+document.addEventListener('DOMContentLoaded', () => {
+    
+    // Handle AI input in preview
+    document.addEventListener('keydown', async (e) => {
+        if (e.key === 'Enter' && e.target.id === 'ai-input') {
+            e.preventDefault();
+            
+            const request = e.target.value.trim();
+            if (!request) return;
+            
+            console.log('Preview AI request:', request);
+            
+            // Clear input
+            e.target.value = '';
+            
+            // Apply update
+            if (window.applyPreviewAIUpdate) {
+                await applyPreviewAIUpdate(request);
+            }
+        }
+    });
+    
+    // Handle AI button click
+    document.addEventListener('click', async (e) => {
+        if (e.target.classList.contains('ai-apply-btn') || e.target.textContent === '✨ Apply') {
+            const input = document.getElementById('ai-input');
+            if (input && input.value) {
+                const request = input.value.trim();
+                input.value = '';
+                
+                if (window.applyPreviewAIUpdate) {
+                    await applyPreviewAIUpdate(request);
+                }
+            }
+        }
+    });
+});
+
+// Update preview display function
+window.updatePreviewDisplay = function() {
+    const preview = document.getElementById('preview-frame');
+    if (!preview || !window.currentTask) return;
+    
+    const files = currentTask.files || {};
+    const html = files['index.html'] || '';
+    const css = files['styles.css'] || '';
+    const js = files['app.js'] || '';
+    
+    // Combine into full HTML
+    let fullHTML = html;
+    
+    if (css && !html.includes('<style>')) {
+        fullHTML = fullHTML.replace('</head>', `<style>${css}</style>\n</head>`);
+    }
+    
+    if (js && !html.includes('<script>')) {
+        fullHTML = fullHTML.replace('</body>', `<script>${js}</script>\n</body>`);
+    }
+    
+    preview.srcdoc = fullHTML;
+};
+
+console.log("✅ Preview handler connected to Claude");

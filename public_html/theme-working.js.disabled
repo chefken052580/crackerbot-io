@@ -1,0 +1,142 @@
+// WORKING THEME DROPDOWN SYSTEM
+console.log('[Working Theme] Starting initialization...');
+
+// Wait for page load
+window.addEventListener('DOMContentLoaded', function() {
+    // Clear any existing theme buttons after a delay
+    setTimeout(function() {
+        // Remove old buttons
+        document.querySelectorAll('.nuclear-theme-btn, .theme-btn, .fallback-theme-btn').forEach(function(el) {
+            el.remove();
+        });
+        
+        // Create the working theme system
+        const style = document.createElement('style');
+        style.innerHTML = `
+            .working-theme-wrapper {
+                position: fixed;
+                top: 10px;
+                right: 10px;
+                z-index: 2147483647;
+            }
+            
+            .working-theme-btn {
+                background: linear-gradient(135deg, #8a2be2, #00ff88);
+                border: none;
+                color: white;
+                padding: 12px 24px;
+                cursor: pointer;
+                border-radius: 25px;
+                font-weight: bold;
+                font-size: 14px;
+                text-transform: uppercase;
+                box-shadow: 0 4px 15px rgba(138, 43, 226, 0.4);
+            }
+            
+            .working-theme-dropdown {
+                position: absolute;
+                top: 100%;
+                right: 0;
+                margin-top: 10px;
+                background: #000;
+                border: 3px solid #00ff88;
+                border-radius: 10px;
+                padding: 5px;
+                min-width: 180px;
+                box-shadow: 0 10px 30px rgba(0, 255, 136, 0.5);
+            }
+            
+            .working-theme-dropdown.hidden {
+                display: none;
+            }
+            
+            .working-theme-item {
+                display: block;
+                width: 100%;
+                padding: 12px 16px;
+                background: transparent;
+                border: none;
+                color: #00ff88;
+                cursor: pointer;
+                text-align: left;
+                font-size: 14px;
+                font-family: monospace;
+                transition: all 0.2s;
+            }
+            
+            .working-theme-item:hover {
+                background: rgba(0, 255, 136, 0.2);
+                padding-left: 24px;
+            }
+        `;
+        document.head.appendChild(style);
+        
+        // Create HTML structure
+        const wrapper = document.createElement('div');
+        wrapper.className = 'working-theme-wrapper';
+        wrapper.innerHTML = `
+            <button class="working-theme-btn">🎨 SELECT THEME</button>
+            <div class="working-theme-dropdown hidden">
+                <button class="working-theme-item" data-theme="cosmic">🌌 Cosmic</button>
+                <button class="working-theme-item" data-theme="matrix">💻 Matrix</button>
+                <button class="working-theme-item" data-theme="cyberpunk">🤖 Cyberpunk</button>
+                <button class="working-theme-item" data-theme="neon">💜 Neon</button>
+                <button class="working-theme-item" data-theme="minimal">⚪ Minimal</button>
+                <button class="working-theme-item" data-theme="dark">🌑 Dark</button>
+            </div>
+        `;
+        
+        document.body.appendChild(wrapper);
+        
+        const button = wrapper.querySelector('.working-theme-btn');
+        const dropdown = wrapper.querySelector('.working-theme-dropdown');
+        const items = wrapper.querySelectorAll('.working-theme-item');
+        
+        // Toggle dropdown on click
+        button.addEventListener('click', function(e) {
+            e.stopPropagation();
+            dropdown.classList.toggle('hidden');
+        });
+        
+        // Theme selection
+        items.forEach(function(item) {
+            item.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const theme = this.dataset.theme;
+                
+                // Apply theme
+                document.body.className = theme === 'cosmic' ? '' : theme + '-theme';
+                localStorage.setItem('crackerBotTheme', theme);
+                
+                // Update button text
+                button.textContent = this.textContent;
+                
+                // Close dropdown
+                dropdown.classList.add('hidden');
+                
+                console.log('[Working Theme] Changed to:', theme);
+            });
+        });
+        
+        // Close on outside click
+        document.addEventListener('click', function() {
+            dropdown.classList.add('hidden');
+        });
+        
+        // Prevent dropdown clicks from bubbling
+        dropdown.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+        
+        // Load saved theme
+        const saved = localStorage.getItem('crackerBotTheme') || 'cosmic';
+        const savedItem = wrapper.querySelector(`[data-theme="${saved}"]`);
+        if (savedItem) {
+            document.body.className = saved === 'cosmic' ? '' : saved + '-theme';
+            button.textContent = savedItem.textContent;
+        }
+        
+        console.log('[Working Theme] ✅ Theme system ready!');
+        
+    }, 2000); // Wait 2 seconds to ensure page is fully loaded
+});

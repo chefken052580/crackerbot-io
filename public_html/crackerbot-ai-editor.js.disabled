@@ -1,0 +1,442 @@
+// AI EDITOR - Complete Implementation
+window.editWithAI = function() {
+    console.log("[AI Editor] editWithAI called");
+    console.log("[AI Editor] currentTask:", window.currentTask);
+    
+    if (!window.currentTask || !window.currentTask.files) {
+        if (window.addMessage) {
+            window.addMessage("System", "❌ No project to edit! Build a project first.", "system");
+        }
+        return;
+    }
+    
+    // Remove any existing modal
+    const existingModal = document.getElementById("ai-editor-modal");
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Create editor modal
+    const modal = document.createElement("div");
+    modal.id = "ai-editor-modal";
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.95);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.3s ease-out;
+    `;
+    
+    const files = Object.keys(window.currentTask.files);
+    const firstFile = files[0] || 'index.html';
+    
+    modal.innerHTML = `
+        <div style="width: 95%; height: 90%; background: #1a1a2e; border: 2px solid #00ff88; border-radius: 10px; display: flex; flex-direction: column;">
+            <!-- Header -->
+            <div style="padding: 15px; border-bottom: 2px solid #00ff88; display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="color: #00ff88; margin: 0;">🤖 AI Editor - ${window.currentTask.projectName}</h2>
+                <button onclick="closeAIEditor()" style="background: #ff4444; color: white; border: none; padding: 8px 20px; cursor: pointer; border-radius: 5px; font-weight: bold;">✕ Close</button>
+            </div>
+            
+            <!-- Main Content -->
+            <div style="flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; overflow: hidden;">
+                <!-- Left: Code Editor -->
+                <div style="display: flex; flex-direction: column; border: 1px solid #00ff88; border-radius: 5px; overflow: hidden;">
+                    <!-- File Tabs -->
+                    <div id="file-tabs" style="display: flex; gap: 5px; padding: 10px; background: rgba(0,255,136,0.1); overflow-x: auto;">
+                        ${files.map(file => `
+                            <button onclick="selectFile('${file}')"
+                                    id="tab-${file.replace(/[^a-z0-9]/gi, "_")}"
+                                    class="file-tab"
+                                    style="padding: 5px 15px; background: ${file === firstFile ? '#00ff88' : 'transparent'}; 
+                                           border: 1px solid #00ff88; color: ${file === firstFile ? '#000' : '#00ff88'}; 
+                                           cursor: pointer; border-radius: 3px; transition: all 0.2s;">
+                                ${file}
+                            </button>
+                        `).join("")}
+                    </div>
+                    
+                    <!-- Code Editor -->
+                    <textarea id="code-editor" 
+                              style="flex: 1; padding: 15px; background: #0a0a0a; color: #00ff88; 
+                                     border: none; font-family: 'Courier New', monospace; 
+                                     font-size: 14px; resize: none; outline: none;"
+                              spellcheck="false">${window.currentTask.files[firstFile] || ''}</textarea>
+                </div>
+                
+                <!-- Right: AI Controls -->
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <!-- AI Request -->
+                    <div style="background: rgba(0,255,136,0.1); padding: 15px; border-radius: 5px;">
+                        <h3 style="color: #00ff88; margin: 0 0 10px 0;">✨ AI Request</h3>
+                        <textarea id="ai-request" 
+                                  placeholder="What would you like AI to do? Examples:
+- Add a dark mode toggle
+- Make it responsive
+- Add animations
+- Fix the layout
+- Add error handling
+- Optimize performance"
+                                  style="width: 100%; height: 120px; padding: 10px; 
+                                         background: #0a0a0a; color: #00ff88; 
+                                         border: 1px solid #00ff88; border-radius: 5px; 
+                                         resize: vertical;"></textarea>
+                        <button onclick="applyAIChanges()" 
+                                style="width: 100%; margin-top: 10px; padding: 12px; 
+                                       background: linear-gradient(135deg, #00ff88, #00ccff); 
+                                       color: #000; border: none; border-radius: 5px; 
+                                       font-weight: bold; cursor: pointer; font-size: 16px;">
+                            🤖 Apply AI Changes
+                        </button>
+                    </div>
+                    
+                    <!-- Status -->
+                    <div style="background: rgba(0,204,255,0.1); padding: 15px; border-radius: 5px;">
+                        <h3 style="color: #00ccff; margin: 0 0 10px 0;">📊 Status</h3>
+                        <div id="ai-status" style="color: #00ccff; min-height: 50px;">
+                            Ready to assist with your code
+                        </div>
+                    </div>
+                    
+                    <!-- Quick Actions -->
+                    <div style="background: rgba(138,43,226,0.1); padding: 15px; border-radius: 5px;">
+                        <h3 style="color: #8a2be2; margin: 0 0 10px 0;">⚡ Quick Actions</h3>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <button onclick="addDarkMode()" 
+                                    style="padding: 10px; background: #8a2be2; color: white; 
+                                           border: none; border-radius: 5px; cursor: pointer;">
+                                🌙 Dark Mode
+                            </button>
+                            <button onclick="makeResponsive()" 
+                                    style="padding: 10px; background: #8a2be2; color: white; 
+                                           border: none; border-radius: 5px; cursor: pointer;">
+                                📱 Responsive
+                            </button>
+                            <button onclick="addAnimations()" 
+                                    style="padding: 10px; background: #8a2be2; color: white; 
+                                           border: none; border-radius: 5px; cursor: pointer;">
+                                ✨ Animations
+                            </button>
+                            <button onclick="improveCode()" 
+                                    style="padding: 10px; background: #8a2be2; color: white; 
+                                           border: none; border-radius: 5px; cursor: pointer;">
+                                🔧 Optimize
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Actions -->
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: auto;">
+                        <button onclick="saveChanges()" 
+                                style="padding: 12px; background: linear-gradient(135deg, #00ff88, #00ccff); 
+                                       color: #000; border: none; border-radius: 5px; 
+                                       font-weight: bold; cursor: pointer;">
+                            💾 Save
+                        </button>
+                        <button onclick="previewProject()" 
+                                style="padding: 12px; background: linear-gradient(135deg, #00ccff, #0088ff); 
+                                       color: white; border: none; border-radius: 5px; 
+                                       font-weight: bold; cursor: pointer;">
+                            👁️ Preview
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Add animation styles if not present
+    if (!document.getElementById('ai-editor-styles')) {
+        const style = document.createElement('style');
+        style.id = 'ai-editor-styles';
+        style.textContent = `
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            .file-tab:hover {
+                background: rgba(0, 255, 136, 0.2) !important;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(modal);
+    
+    // Set current file
+    window.currentEditFile = firstFile;
+    
+    // Show message
+    if (window.addMessage) {
+        window.addMessage("CrackerBot", `📝 AI Editor opened - ${files.length} files available`, "bot");
+    }
+};
+
+// Select file to edit
+window.selectFile = function(filename) {
+    console.log("[AI Editor] Selecting file:", filename);
+    window.currentEditFile = filename;
+    
+    // Update editor content
+    const editor = document.getElementById("code-editor");
+    if (editor && window.currentTask && window.currentTask.files) {
+        editor.value = window.currentTask.files[filename] || '';
+    }
+    
+    // Update tab styles
+    document.querySelectorAll('.file-tab').forEach(tab => {
+        tab.style.background = 'transparent';
+        tab.style.color = '#00ff88';
+    });
+    
+    const activeTab = document.getElementById(`tab-${filename.replace(/[^a-z0-9]/gi, "_")}`);
+    if (activeTab) {
+        activeTab.style.background = '#00ff88';
+        activeTab.style.color = '#000';
+    }
+    
+    // Update status
+    const status = document.getElementById("ai-status");
+    if (status) {
+        status.textContent = `Editing: ${filename}`;
+    }
+};
+
+// Apply AI changes
+window.applyAIChanges = async function() {
+    const request = document.getElementById("ai-request");
+    const editor = document.getElementById("code-editor");
+    const status = document.getElementById("ai-status");
+    
+    if (!request || !editor || !status) return;
+    
+    const aiRequest = request.value.trim();
+    if (!aiRequest) {
+        status.textContent = "❌ Please describe what you want AI to do";
+        status.style.color = "#ff4444";
+        return;
+    }
+    
+    status.textContent = "🤖 AI is processing your request...";
+    status.style.color = "#00ccff";
+    
+    const currentCode = editor.value;
+    const filename = window.currentEditFile;
+    
+    // Try socket connection first
+    if (window.socket && window.socket.connected) {
+        window.socket.emit('modify_code', {
+            filename: filename,
+            code: currentCode,
+            request: aiRequest,
+            projectName: window.currentTask.projectName
+        });
+        
+        window.socket.once('code_modified', (data) => {
+            if (data.error) {
+                status.textContent = `❌ ${data.error}`;
+                status.style.color = "#ff4444";
+            } else if (data.code) {
+                editor.value = data.code;
+                status.textContent = "✅ AI changes applied!";
+                status.style.color = "#00ff88";
+                request.value = "";
+                
+                // Auto-save
+                window.currentTask.files[filename] = data.code;
+            }
+        });
+        
+        // Timeout fallback
+        setTimeout(() => {
+            if (status.textContent.includes("processing")) {
+                applyLocalChanges(aiRequest);
+            }
+        }, 5000);
+    } else {
+        // Use local simulation
+        applyLocalChanges(aiRequest);
+    }
+};
+
+// Local AI simulation
+function applyLocalChanges(request) {
+    const editor = document.getElementById("code-editor");
+    const status = document.getElementById("ai-status");
+    const filename = window.currentEditFile;
+    let code = editor.value;
+    const req = request.toLowerCase();
+    
+    // Apply changes based on request
+    if (req.includes('dark')) addDarkMode();
+    else if (req.includes('responsive') || req.includes('mobile')) makeResponsive();
+    else if (req.includes('animat')) addAnimations();
+    else if (req.includes('optimize') || req.includes('improve')) improveCode();
+    else {
+        // Generic improvement
+        const comment = filename.endsWith('.html') ? `<!-- AI: ${request} -->` :
+                       filename.endsWith('.css') ? `/* AI: ${request} */` :
+                       `// AI: ${request}`;
+        editor.value = comment + '\n' + code;
+        status.textContent = "✅ Request noted in comments";
+        status.style.color = "#00ff88";
+    }
+    
+    // Clear request
+    const requestField = document.getElementById("ai-request");
+    if (requestField) requestField.value = "";
+}
+
+// Quick action functions
+window.addDarkMode = function() {
+    const editor = document.getElementById("code-editor");
+    const filename = window.currentEditFile;
+    let code = editor.value;
+    
+    if (filename.endsWith('.html')) {
+        if (!code.includes('dark-mode')) {
+            code = code.replace('</head>', `
+<style>
+    .dark-mode { background: #1a1a1a; color: #e0e0e0; }
+    .dark-mode a { color: #00ccff; }
+    .dark-mode button { background: #333; color: #fff; }
+</style>
+</head>`);
+        }
+    } else if (filename.endsWith('.css')) {
+        code += `\n\n/* Dark Mode */
+.dark-mode { background: #1a1a1a; color: #e0e0e0; }
+.dark-mode * { border-color: #444; }`;
+    }
+    
+    editor.value = code;
+    window.currentTask.files[filename] = code;
+    updateStatus("✅ Dark mode added!");
+};
+
+window.makeResponsive = function() {
+    const editor = document.getElementById("code-editor");
+    const filename = window.currentEditFile;
+    let code = editor.value;
+    
+    if (filename.endsWith('.html') || filename.endsWith('.css')) {
+        const responsiveCSS = `
+/* Responsive Design */
+@media (max-width: 768px) {
+    body { padding: 10px; }
+    .container, main { width: 100%; }
+    h1 { font-size: 1.5rem; }
+    img { max-width: 100%; height: auto; }
+}`;
+        
+        if (filename.endsWith('.html')) {
+            code = code.replace('</head>', `<style>${responsiveCSS}</style>\n</head>`);
+        } else {
+            code += responsiveCSS;
+        }
+    }
+    
+    editor.value = code;
+    window.currentTask.files[filename] = code;
+    updateStatus("✅ Responsive design added!");
+};
+
+window.addAnimations = function() {
+    const editor = document.getElementById("code-editor");
+    const filename = window.currentEditFile;
+    let code = editor.value;
+    
+    const animationCSS = `
+/* Animations */
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideIn { from { transform: translateY(-20px); } to { transform: translateY(0); } }
+.animate-fade { animation: fadeIn 0.5s; }
+.animate-slide { animation: slideIn 0.5s; }`;
+    
+    if (filename.endsWith('.html')) {
+        code = code.replace('</head>', `<style>${animationCSS}</style>\n</head>`);
+    } else if (filename.endsWith('.css')) {
+        code += animationCSS;
+    }
+    
+    editor.value = code;
+    window.currentTask.files[filename] = code;
+    updateStatus("✅ Animations added!");
+};
+
+window.improveCode = function() {
+    const editor = document.getElementById("code-editor");
+    const filename = window.currentEditFile;
+    let code = editor.value;
+    
+    // Add meta tags if HTML
+    if (filename.endsWith('.html') && !code.includes('viewport')) {
+        code = code.replace('<head>', `<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">`);
+    }
+    
+    editor.value = code;
+    window.currentTask.files[filename] = code;
+    updateStatus("✅ Code optimized!");
+};
+
+function updateStatus(message) {
+    const status = document.getElementById("ai-status");
+    if (status) {
+        status.textContent = message;
+        status.style.color = "#00ff88";
+    }
+}
+
+// Save changes
+window.saveChanges = function() {
+    const editor = document.getElementById("code-editor");
+    if (editor && window.currentEditFile && window.currentTask) {
+        window.currentTask.files[window.currentEditFile] = editor.value;
+        
+        // Save to localStorage
+        if (window.saveProjectToStorage) {
+            window.saveProjectToStorage(window.currentTask);
+        }
+        
+        updateStatus("✅ Changes saved!");
+    }
+};
+
+// Preview project
+window.previewProject = function() {
+    saveChanges();
+    const htmlFile = Object.keys(window.currentTask.files).find(f => f.endsWith('.html'));
+    if (htmlFile) {
+        const blob = new Blob([window.currentTask.files[htmlFile]], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank');
+        updateStatus("👁️ Preview opened in new tab");
+    }
+};
+
+// Close editor
+window.closeAIEditor = function() {
+    saveChanges();
+    const modal = document.getElementById("ai-editor-modal");
+    if (modal) {
+        modal.remove();
+    }
+    
+    if (window.showPostBuildOptions) {
+        window.showPostBuildOptions();
+    }
+    
+    if (window.addMessage) {
+        window.addMessage("CrackerBot", "✅ Editor closed, changes saved", "bot");
+    }
+};
+
+console.log("[AI Editor] ✅ Loaded - editWithAI ready");

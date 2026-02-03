@@ -1,0 +1,245 @@
+// crackerbot-user-persistence.js - FIXED VERSION v2
+// Works with welcome-name.js system
+
+window.UserPersistence = {
+    
+    generateFingerprint() {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        ctx.textBaseline = 'top';
+        ctx.font = '14px Arial';
+        ctx.fillText('CrackerBot🚀', 2, 2);
+        const canvasData = canvas.toDataURL();
+        
+        const factors = [
+            navigator.userAgent,
+            navigator.language,
+            screen.width + 'x' + screen.height,
+            screen.colorDepth,
+            new Date().getTimezoneOffset(),
+            navigator.platform,
+            canvasData.slice(-50),
+            navigator.hardwareConcurrency || 0,
+            navigator.maxTouchPoints || 0
+        ];
+        
+        let hash = 0;
+        const str = factors.join('|');
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+        }
+        
+        return 'user_' + Math.abs(hash).toString(36);
+    },
+    
+    getUserId() {
+        let userId = localStorage.getItem('crackerBotUserId');
+        if (userId) return userId;
+        
+        userId = sessionStorage.getItem('crackerBotUserId');
+        if (userId) {
+            localStorage.setItem('crackerBotUserId', userId);
+            return userId;
+        }
+        
+        const cookies = document.cookie.split(';');
+        for (const cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'crackerBotUserId') {
+                userId = value;
+                localStorage.setItem('crackerBotUserId', userId);
+                return userId;
+            }
+        }
+        
+        userId = this.generateFingerprint();
+        this.saveUserId(userId);
+        return userId;
+    },
+    
+    saveUserId(userId) {
+        localStorage.setItem('crackerBotUserId', userId);
+        sessionStorage.setItem('crackerBotUserId', userId);
+        
+        const expires = new Date();
+        expires.setFullYear(expires.getFullYear() + 1);
+        document.cookie = `crackerBotUserId=${userId}; expires=${expires.toUTCString()}; path=/`;
+        
+        const fingerprint = this.generateFingerprint();
+        localStorage.setItem(`crackerBot_${fingerprint}`, userId);
+    },
+    
+    getUserName() {
+        // ONLY use the single source of truth
+        return localStorage.getItem('crackerBotUserName');
+    },
+    
+    saveUserName(userName) {
+        // ONLY save to one location
+        localStorage.setItem('crackerBotUserName', userName);
+        window.userName = userName;
+        
+        // Update UI
+        const userNameEl = document.getElementById('user-name');
+        if (userNameEl) {
+            userNameEl.textContent = userName;
+        }
+        
+        // Save to cookie as backup
+        const expires = new Date();
+        expires.setFullYear(expires.getFullYear() + 1);
+        document.cookie = `crackerBotUserName=${userName}; expires=${expires.toUTCString()}; path=/`;
+    },
+    
+    cleanupOldNames() {
+        // Remove ALL duplicate name keys
+        const keysToRemove = [
+            'userName',
+            'username', 
+            'user-name',
+            'crackerbot-username',
+            'cracker-bot-user',
+            'user_name'
+        ];
+        
+        keysToRemove.forEach(key => {
+            if (localStorage.getItem(key)) {
+                console.log(`[UserPersistence] Removing old key: ${key}`);
+                localStorage.removeItem(key);
+            }
+        });
+        
+        // Clean up old user-specific names
+        const userId = this.getUserId();
+        const oldUserKey = `crackerBotUserName_${userId}`;
+        if (localStorage.getItem(oldUserKey)) {
+            // Transfer to main key if needed
+            const oldName = localStorage.getItem(oldUserKey);
+            if (oldName && !localStorage.getItem('crackerBotUserName')) {
+                localStorage.setItem('crackerBotUserName', oldName);
+            }
+            localStorage.removeItem(oldUserKey);
+        }
+    },
+    
+    init() {
+        // Clean up old duplicate names first
+        this.cleanupOldNames();
+        
+        const userId = this.getUserId();
+        const userName = this.getUserName();
+        
+        console.log("[UserPersistence] User ID:", userId);
+        console.log("[UserPersistence] User Name:", userName);
+        
+        if (userName && userName !== 'Guest' && userName !== '') {
+            window.userName = userName;
+            
+            // Update UI
+            const userNameEl = document.getElementById('user-name');
+            if (userNameEl) {
+                userNameEl.textContent = userName;
+            }
+            
+            // DON'T show welcome message here - let welcome-name.js handle it
+            // Just set up the main choices
+            setTimeout(() => {
+                if (typeof window.showMainChoice === 'function') {
+                    window.showMainChoice();
+                } else {
+                    createMainChoiceBubbles();
+                }
+            }, 1500); // Delay to let welcome-name.js show its message first
+            
+            return true;
+        }
+        
+        // No username found - let welcome-name.js handle the popup
+        return false;
+    }
+};
+
+// Create main choice bubbles if showMainChoice doesn't exist
+function createMainChoiceBubbles() {
+    const bubbles = document.getElementById('choice-bubbles');
+    if (!bubbles) return;
+    
+    const options = [
+        "💬 Chat",
+        "🚀 Build Something Epic", 
+        "📁 View Projects"
+    ];
+    
+    bubbles.innerHTML = '';
+    
+    options.forEach(option => {
+        const button = document.createElement('button');
+        button.className = 'choice-bubble';
+        button.textContent = option;
+        button.onclick = () => {
+            if (window.handleOption) {
+                window.handleOption(option);
+            } else {
+                handleOptionFallback(option);
+            }
+        };
+        bubbles.appendChild(button);
+    });
+    
+    bubbles.style.display = 'block';
+}
+
+// Fallback option handler
+function handleOptionFallback(option) {
+    if (window.addMessage) {
+        window.addMessage("You", option, "user");
+    }
+    
+    const bubbles = document.getElementById('choice-bubbles');
+    if (bubbles) bubbles.innerHTML = '';
+    
+    if (option.includes("Build")) {
+        if (window.promptProjectName) {
+            window.promptProjectName();
+        } else {
+            if (window.addMessage) {
+                window.addMessage("CrackerBot", "🚀 Let's build something! What would you like to create?", "bot");
+            }
+        }
+    } else if (option.includes("Chat")) {
+        if (window.addMessage) {
+            window.addMessage("CrackerBot", "💬 Let's chat! What's on your mind?", "bot");
+        }
+    } else if (option.includes("View Projects")) {
+        if (window.showProjectsManager) {
+            window.showProjectsManager();
+        } else {
+            if (window.addMessage) {
+                window.addMessage("System", "No projects yet. Build something first!", "system");
+            }
+        }
+    }
+}
+
+// Initialize on DOM ready - but let welcome-name.js go first
+document.addEventListener("DOMContentLoaded", () => {
+    // Wait longer to let welcome-name.js handle the initial check
+    setTimeout(() => {
+        // Only initialize if welcome-name.js hasn't already handled it
+        if (!window.userName || window.userName === 'Guest') {
+            const isReturningUser = UserPersistence.init();
+            
+            // If still no user after init, trigger the cosmic welcome
+            if (!isReturningUser && window.showCosmicWelcomePopup) {
+                // window.showCosmicWelcomePopup(); // DISABLED - welcome-name.js handles this;
+            }
+        } else {
+            // User already set by welcome-name.js, just init the persistence
+            UserPersistence.init();
+        }
+    }, 2000); // Wait 2 seconds to ensure welcome-name.js runs first
+});
+
+console.log("✅ User persistence loaded (unified name system)");

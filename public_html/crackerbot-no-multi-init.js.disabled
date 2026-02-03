@@ -1,0 +1,31 @@
+// Prevent multiple initializations from other scripts
+
+// Override showMainChoice to only run once per session
+(function() {
+    let mainChoiceShown = false;
+    const originalShowMainChoice = window.showMainChoice;
+    
+    window.showMainChoice = function() {
+        if (mainChoiceShown) {
+            console.log("❌ Blocking duplicate showMainChoice");
+            return;
+        }
+        mainChoiceShown = true;
+        
+        if (originalShowMainChoice) {
+            console.log("✅ Showing main choice");
+            return originalShowMainChoice.apply(this, arguments);
+        }
+    };
+    
+    // Reset the flag after user makes a choice
+    const originalHandleMainChoice = window.handleMainChoice;
+    window.handleMainChoice = function(choice) {
+        mainChoiceShown = false; // Allow showing again after user chooses
+        if (originalHandleMainChoice) {
+            return originalHandleMainChoice.apply(this, arguments);
+        }
+    };
+})();
+
+console.log("✅ Multi-init prevention active");

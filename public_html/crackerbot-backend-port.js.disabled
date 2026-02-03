@@ -1,0 +1,27 @@
+// Backend Port Configuration
+window.BACKEND_PORT = 4011;  // Changed from 4010
+window.BACKEND_URL = `http://localhost:${window.BACKEND_PORT}`;
+
+console.log("✅ Backend configured on port:", window.BACKEND_PORT);
+
+// Override all backend calls to use the new port
+const originalFetch = window.fetch;
+window.fetch = function(url, options) {
+    // Replace any old port references
+    if (url.includes("localhost:4011")) {
+        url = url.replace("localhost:4011", `localhost:${window.BACKEND_PORT}`);
+    }
+    if (url.includes("/api/generate-project")) {
+        url = `${window.BACKEND_URL}/api/generate-project`;
+    }
+    return originalFetch(url, options);
+};
+
+// Update startBuilding to use correct port
+if (window.startBuilding) {
+    const originalStartBuilding = window.startBuilding;
+    window.startBuilding = async function() {
+        console.log("Building with backend on port", window.BACKEND_PORT);
+        return originalStartBuilding.call(this);
+    };
+}

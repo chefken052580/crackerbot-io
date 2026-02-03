@@ -1,0 +1,738 @@
+// CrackerBot Build Support - Enhanced AI Integration
+console.log('[Build Support] Loading enhanced build support functions...');
+
+(function() {
+    // Initialize projects array
+    window.projects = window.projects || [];
+    
+    // Project type definitions for reference
+    window.ALL_PROJECT_TYPES = {
+        "web-app": { display: "🌐 Web App", builder: "web" },
+        "website": { display: "🌐 Website", builder: "web" },
+        "react-app": { display: "⚛️ React App", builder: "framework" },
+        "vue-app": { display: "💚 Vue App", builder: "framework" },
+        "game": { display: "🎮 Game", builder: "game" },
+        "three-js-app": { display: "🎲 3D App", builder: "game" },
+        "discord-bot": { display: "🤖 Discord Bot", builder: "bot" },
+        "telegram-bot": { display: "💬 Telegram Bot", builder: "bot" },
+        "trading-bot": { display: "📈 Trading Bot", builder: "bot" },
+        "web-scraper": { display: "🕷️ Web Scraper", builder: "bot" },
+        "smart-contract": { display: "📜 Smart Contract", builder: "web3" },
+        "nft-contract": { display: "🎨 NFT Contract", builder: "web3" },
+        "defi-protocol": { display: "💰 DeFi Protocol", builder: "web3" },
+        "api-server": { display: "🔌 REST API", builder: "backend" },
+        "graphql-api": { display: "🚀 GraphQL API", builder: "backend" },
+        "websocket-server": { display: "🔗 WebSocket Server", builder: "backend" },
+        "microservice": { display: "📦 Microservice", builder: "backend" },
+        "mobile-app": { display: "📱 Mobile App", builder: "mobile" },
+        "chrome-extension": { display: "🧩 Chrome Extension", builder: "tool" },
+        "cli-tool": { display: "⌨️ CLI Tool", builder: "tool" },
+        "ml-model": { display: "🤖 ML Model", builder: "ai" }
+    };
+    
+    // Enhanced live editor event handler setup
+    function setupLiveEditorEvents() {
+        if (window.socket) {
+            console.log('[Build Support] Setting up live editor events');
+            
+            // Handle live editor open requests
+            window.socket.on("open_live_editor", (data) => {
+                console.log("[Build Support] Received open_live_editor event:", data);
+                
+                if (window.livePreview && typeof window.livePreview.autoOpen === 'function') {
+                    console.log("[Build Support] Opening live preview via autoOpen");
+                    try {
+                        window.livePreview.autoOpen(data);
+                    } catch (error) {
+                        console.error("[Build Support] livePreview.autoOpen failed:", error);
+                    }
+                } else {
+                    console.log("[Build Support] Live preview autoOpen not available");
+                    // Fallback: Try to initialize live preview
+                    initializeLivePreview(data);
+                }
+            });
+            
+            // Handle live updates for streaming editor
+            window.socket.on("live_update", (data) => {
+                console.log("[Build Support] Received live_update:", data.type);
+                
+                if (window.livePreview && typeof window.livePreview.handleLiveUpdate === 'function') {
+                    window.livePreview.handleLiveUpdate(data);
+                }
+            });
+            
+            // Handle file streaming
+            window.socket.on("file_stream", (data) => {
+                console.log("[Build Support] Received file_stream:", data.filePath);
+                
+                if (window.livePreview && typeof window.livePreview.handleFileStream === 'function') {
+                    window.livePreview.handleFileStream(data);
+                }
+            });
+            
+        } else {
+            console.log('[Build Support] Socket not available, retrying...');
+            setTimeout(setupLiveEditorEvents, 1000);
+        }
+    }
+    
+    // Fallback live preview initialization
+    function initializeLivePreview(taskData) {
+        console.log('[Build Support] Initializing fallback live preview');
+        
+        if (!window.livePreview) {
+            console.log('[Build Support] Creating basic live preview object');
+            window.livePreview = {
+                isOpen: false,
+                autoOpen: function(data) {
+                    console.log('[Build Support] Fallback autoOpen called:', data);
+                    this.isOpen = true;
+                    this.currentTask = data;
+                },
+                close: function() {
+                    this.isOpen = false;
+                },
+                updateFiles: function(files) {
+                    console.log('[Build Support] Fallback updateFiles:', Object.keys(files));
+                }
+            };
+        }
+        
+        if (typeof window.livePreview.autoOpen === 'function') {
+            window.livePreview.autoOpen(taskData);
+        }
+    }
+    
+    // Set up live editor events when socket is available
+    if (window.socket) {
+        setupLiveEditorEvents();
+    } else {
+        // Wait for socket to be available
+        let attempts = 0;
+        const maxAttempts = 10;
+        
+        const waitForSocket = () => {
+            attempts++;
+            console.log(`[Build Support] Waiting for socket (attempt ${attempts}/${maxAttempts})`);
+            
+            if (window.socket) {
+                setupLiveEditorEvents();
+            } else if (attempts < maxAttempts) {
+                setTimeout(waitForSocket, 1000);
+            } else {
+                console.error('[Build Support] Socket not available after waiting');
+            }
+        };
+        
+        waitForSocket();
+    }
+    
+    // Enhanced template generators
+    window.generateWebTemplate = function(projectName, features) {
+        const safeProjectName = projectName.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, ' ').trim();
+        const safeFeatures = features || 'Modern responsive design';
+        
+        return {
+            'index.html': `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${safeProjectName}</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1 class="title">${safeProjectName}</h1>
+            <p class="subtitle">A modern web application</p>
+        </header>
+        
+        <main class="main-content">
+            <section class="hero">
+                <h2>Welcome to ${safeProjectName}</h2>
+                <div class="features">
+                    <h3>Features:</h3>
+                    <p>${safeFeatures}</p>
+                </div>
+                <button class="cta-button" onclick="initApp()">Get Started</button>
+            </section>
+            
+            <section class="content">
+                <div class="card">
+                    <h3>🚀 Fast</h3>
+                    <p>Lightning-fast performance and modern design</p>
+                </div>
+                <div class="card">
+                    <h3>📱 Responsive</h3>
+                    <p>Works perfectly on all devices and screen sizes</p>
+                </div>
+                <div class="card">
+                    <h3>🛡️ Secure</h3>
+                    <p>Built with security and best practices in mind</p>
+                </div>
+            </section>
+        </main>
+        
+        <footer class="footer">
+            <p>&copy; 2024 ${safeProjectName}. Built with CrackerBot AI.</p>
+        </footer>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html>`,
+            
+            'app.js': `// ${safeProjectName} - Interactive Web Application
+// Features: ${safeFeatures}
+
+console.log('${safeProjectName} initializing...');
+
+class ${safeProjectName.replace(/\s+/g, '')}App {
+    constructor() {
+        this.initialized = false;
+        this.init();
+    }
+    
+    init() {
+        console.log('Initializing ${safeProjectName}...');
+        this.setupEventListeners();
+        this.setupAnimations();
+        this.initialized = true;
+        console.log('${safeProjectName} ready!');
+    }
+    
+    setupEventListeners() {
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+        
+        // Card hover effects
+        document.querySelectorAll('.card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-5px)';
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0)';
+            });
+        });
+    }
+    
+    setupAnimations() {
+        // Intersection Observer for scroll animations
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('animate-in');
+                }
+            });
+        }, { threshold: 0.1 });
+        
+        // Observe all cards
+        document.querySelectorAll('.card').forEach(el => {
+            observer.observe(el);
+        });
+    }
+}
+
+// Global functions
+function initApp() {
+    console.log('App started!');
+    const button = document.querySelector('.cta-button');
+    if (button) {
+        button.textContent = 'Running! ✅';
+        button.style.background = 'linear-gradient(135deg, #4CAF50, #45a049)';
+    }
+    
+    // Add some interactive feedback
+    showNotification('${safeProjectName} is now running!', 'success');
+}
+
+function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = \`notification notification-\${type}\`;
+    notification.textContent = message;
+    
+    // Style the notification
+    Object.assign(notification.style, {
+        position: 'fixed',
+        top: '20px',
+        right: '20px',
+        padding: '15px 25px',
+        borderRadius: '8px',
+        color: 'white',
+        backgroundColor: type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.3)',
+        zIndex: '1000',
+        transform: 'translateX(400px)',
+        transition: 'transform 0.3s ease'
+    });
+    
+    document.body.appendChild(notification);
+    
+    // Animate in
+    setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+    }, 100);
+    
+    // Remove after 3 seconds
+    setTimeout(() => {
+        notification.style.transform = 'translateX(400px)';
+        setTimeout(() => {
+            if (document.body.contains(notification)) {
+                document.body.removeChild(notification);
+            }
+        }, 300);
+    }, 3000);
+}
+
+// Initialize app when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    new ${safeProjectName.replace(/\s+/g, '')}App();
+});
+
+// Export for module usage
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = ${safeProjectName.replace(/\s+/g, '')}App;
+}`,
+            
+            'styles.css': `/* ${safeProjectName} - Modern Styles */
+/* Features: ${safeFeatures} */
+
+:root {
+    --primary-color: #667eea;
+    --secondary-color: #764ba2;
+    --accent-color: #4CAF50;
+    --text-primary: #333;
+    --text-secondary: #666;
+    --background: #ffffff;
+    --card-background: #f8f9fa;
+    --border-color: #e9ecef;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    --shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    line-height: 1.6;
+    color: var(--text-primary);
+    background: var(--background);
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.header {
+    text-align: center;
+    padding: 4rem 0 2rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    margin-bottom: 3rem;
+}
+
+.title {
+    font-size: 3rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    background: linear-gradient(45deg, #FFD700, #FFA500);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.subtitle {
+    font-size: 1.2rem;
+    opacity: 0.9;
+    font-weight: 300;
+}
+
+.main-content {
+    padding: 0 20px;
+}
+
+.hero {
+    text-align: center;
+    margin-bottom: 4rem;
+}
+
+.hero h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+}
+
+.features {
+    margin: 2rem 0;
+    padding: 2rem;
+    background: var(--card-background);
+    border-radius: 15px;
+    border: 1px solid var(--border-color);
+    max-width: 600px;
+    margin: 2rem auto;
+}
+
+.features h3 {
+    color: var(--primary-color);
+    margin-bottom: 1rem;
+}
+
+.cta-button {
+    padding: 1rem 2rem;
+    font-size: 1.1rem;
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow);
+    font-weight: 600;
+}
+
+.cta-button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-hover);
+}
+
+.content {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+    margin: 3rem 0;
+}
+
+.card {
+    padding: 2rem;
+    background: var(--card-background);
+    border-radius: 15px;
+    border: 1px solid var(--border-color);
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow);
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.card:hover {
+    box-shadow: var(--shadow-hover);
+}
+
+.card.animate-in {
+    opacity: 1;
+    transform: translateY(0);
+    transition: all 0.6s ease;
+}
+
+.card h3 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+}
+
+.card p {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.footer {
+    text-align: center;
+    padding: 3rem 0;
+    margin-top: 4rem;
+    border-top: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .title {
+        font-size: 2rem;
+    }
+    
+    .hero h2 {
+        font-size: 1.8rem;
+    }
+    
+    .content {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+    
+    .card {
+        padding: 1.5rem;
+    }
+}
+
+/* Animation keyframes */
+@keyframes slideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Notification styles */
+.notification {
+    border-radius: 8px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}`,
+            
+            'README.md': `# ${safeProjectName}
+
+${safeFeatures}
+
+## 🚀 Quick Start
+
+1. Open \`index.html\` in your browser
+2. Click "Get Started" to initialize the application
+3. Explore the features and customize as needed
+
+## 📁 Project Structure
+
+\`\`\`
+${safeProjectName.toLowerCase().replace(/\s+/g, '-')}/
+├── index.html          # Main HTML file
+├── app.js             # JavaScript functionality
+├── styles.css         # CSS styles
+└── README.md          # This file
+\`\`\`
+
+## ✨ Features
+
+- 📱 Fully responsive design
+- 🎨 Modern UI with smooth animations
+- ⚡ Fast loading and interactive
+- 🛡️ Clean, semantic code
+- 🎯 Cross-browser compatible
+
+## 🛠️ Customization
+
+### Changing Colors
+Edit the CSS custom properties in \`styles.css\`:
+
+\`\`\`css
+:root {
+    --primary-color: #667eea;
+    --secondary-color: #764ba2;
+    --accent-color: #4CAF50;
+}
+\`\`\`
+
+### Adding Content
+Edit \`index.html\` to add your own content and sections.
+
+### JavaScript Functionality
+Extend the app class in \`app.js\` to add new features.
+
+## 📄 License
+
+This project was generated by CrackerBot AI and is free to use and modify.
+
+## 🤖 Generated by CrackerBot
+
+This project was automatically generated using CrackerBot AI Builder.
+Visit [CrackerBot](https://crackerbot.io) to create your own projects!`
+        };
+    };
+    
+    // Enhanced download project function
+    window.downloadCurrentProject = function() {
+        if (!window.currentTask || !window.currentTask.files) {
+            console.warn('[Build Support] No project to download');
+            if (window.addMessage) {
+                window.addMessage("System", "⚠️ No project available to download", "system");
+            }
+            return;
+        }
+        
+        console.log('[Build Support] Downloading project:', window.currentTask.projectName);
+        
+        if (window.downloadProject && typeof window.downloadProject === 'function') {
+            // Use existing download function if available
+            window.downloadProject();
+        } else if (typeof JSZip !== 'undefined') {
+            // Enhanced download using JSZip
+            const zip = new JSZip();
+            const files = window.currentTask.files;
+            const projectName = window.currentTask.projectName || 'CrackerBot-Project';
+            
+            // Add all files to zip
+            Object.entries(files).forEach(([filename, content]) => {
+                zip.file(filename, content);
+            });
+            
+            // Generate and download
+            zip.generateAsync({ type: "blob" }).then(function(content) {
+                const url = URL.createObjectURL(content);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${projectName.replace(/\s+/g, '-')}.zip`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                if (window.addMessage) {
+                    window.addMessage("System", `📥 Downloaded ${projectName}.zip`, "success");
+                }
+            }).catch(function(error) {
+                console.error('[Build Support] Download failed:', error);
+                if (window.addMessage) {
+                    window.addMessage("System", "❌ Download failed", "system");
+                }
+            });
+        } else {
+            console.error('[Build Support] JSZip not available');
+            if (window.addMessage) {
+                window.addMessage("System", "❌ Download functionality not available", "system");
+            }
+        }
+    };
+    
+    // Enhanced project validation
+    window.validateProject = function(task) {
+        if (!task) {
+            console.warn('[Build Support] No task provided for validation');
+            return false;
+        }
+        if (!task.projectName) {
+            console.warn('[Build Support] Project missing name');
+            return false;
+        }
+        if (!task.files || Object.keys(task.files).length === 0) {
+            console.warn('[Build Support] Project missing files');
+            return false;
+        }
+        
+        console.log('[Build Support] Project validation passed');
+        return true;
+    };
+    
+    // Enhanced socket debug helper
+    window.debugSocketEvents = function() {
+        console.log("=== SOCKET DEBUG ===");
+        console.log("Socket exists:", !!window.socket);
+        console.log("Socket connected:", window.socket?.connected);
+        console.log("Socket ID:", window.socket?.id);
+        console.log("Current task:", window.currentTask);
+        console.log("Projects count:", window.projects?.length || 0);
+        console.log("Live preview:", !!window.livePreview);
+        console.log("AI Connector:", !!window.handleChatToAI);
+        console.log("==================");
+    };
+    
+    // Project completion helper
+    window.handleProjectCompletion = function(projectData) {
+        console.log('[Build Support] Handling project completion:', projectData?.projectName);
+        
+        if (!projectData || !projectData.files) {
+            console.error('[Build Support] Invalid project data for completion');
+            return;
+        }
+        
+        // Update current task
+        if (window.currentTask) {
+            window.currentTask.files = projectData.files;
+            window.currentTask.status = 'Complete';
+            window.currentTask.completed = true;
+            window.currentTask.completedAt = new Date().toISOString();
+        }
+        
+        // Save to projects list
+        if (window.projects && window.currentTask) {
+            const existingIndex = window.projects.findIndex(p => p.taskId === window.currentTask.taskId);
+            if (existingIndex >= 0) {
+                window.projects[existingIndex] = {...window.currentTask};
+            } else {
+                window.projects.push({...window.currentTask});
+            }
+            
+            // Save to localStorage
+            try {
+                localStorage.setItem("crackerBotProjects", JSON.stringify(window.projects));
+                console.log('[Build Support] Project saved to localStorage');
+            } catch (error) {
+                console.error('[Build Support] Failed to save to localStorage:', error);
+            }
+        }
+        
+        // Update live preview
+        if (window.livePreview && typeof window.livePreview.updateFiles === 'function') {
+            try {
+                window.livePreview.updateFiles(projectData.files);
+                console.log('[Build Support] Live preview updated with project files');
+            } catch (error) {
+                console.error('[Build Support] Failed to update live preview:', error);
+            }
+        }
+        
+        console.log('[Build Support] Project completion handling finished');
+    };
+    
+    // Export enhanced functions
+    window.BuildSupport = {
+        generateWebTemplate: window.generateWebTemplate,
+        downloadCurrentProject: window.downloadCurrentProject,
+        validateProject: window.validateProject,
+        debugSocketEvents: window.debugSocketEvents,
+        handleProjectCompletion: window.handleProjectCompletion,
+        setupLiveEditorEvents: setupLiveEditorEvents
+    };
+    
+    console.log('[Build Support] ✅ Enhanced build support functions ready');
+    
+})();
+// ✅ FIX: Add the missing buildProjectWithProgress function
+window.buildProjectWithProgress = function() {
+    console.log('[Build Support] ✅ buildProjectWithProgress triggered');
+    
+    const task = window.currentTask;
+    if (!task || !task.projectName) {
+        console.error('[Build Support] No current task to build');
+        return;
+    }
+    
+    // Emit ai_generate_project to backend
+    if (window.socket && window.socket.connected) {
+        console.log('[Build Support] Emitting ai_generate_project event');
+        window.socket.emit('ai_generate_project', {
+            name: task.projectName,
+            type: task.projectType || 'web-app',
+            features: task.features || task.projectName,
+            taskId: task.taskId
+        });
+    } else {
+        console.error('[Build Support] Socket not connected!');
+        if (window.addMessage) {
+            window.addMessage("System", "❌ Not connected to backend", "error");
+        }
+    }
+};
+
+// Alias for compatibility
+window.actuallyBuildProject = window.buildProjectWithProgress;
+
+console.log('[Build Support] ✅ buildProjectWithProgress function added');

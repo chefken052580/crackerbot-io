@@ -1,0 +1,237 @@
+// Modal functions for CrackerBot
+
+function showProjectTypesModal() {
+    // Remove any existing modal
+    const existingModal = document.getElementById("project-type-modal");
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    // Create modal overlay
+    const modalOverlay = document.createElement("div");
+    modalOverlay.className = "modal-overlay";
+    modalOverlay.id = "project-type-modal";
+    
+    // Create modal content
+    const modalContent = document.createElement("div");
+    modalContent.className = "modal-content";
+    
+    // Create modal header
+    const modalHeader = document.createElement("div");
+    modalHeader.className = "modal-header";
+    
+    const modalTitle = document.createElement("h2");
+    modalTitle.className = "modal-title";
+    modalTitle.textContent = "🚀 Choose Your Project Type";
+    
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "modal-close";
+    closeBtn.innerHTML = "✕";
+    closeBtn.onclick = () => modalOverlay.remove();
+    
+    modalHeader.appendChild(modalTitle);
+    modalHeader.appendChild(closeBtn);
+    
+    // Create modal body
+    const modalBody = document.createElement("div");
+    modalBody.className = "modal-body";
+    
+    const projectGrid = document.createElement("div");
+    projectGrid.className = "project-type-grid";
+    
+    // Add project types
+    CRACKERBOT_CONFIG.projectTypes.forEach(type => {
+        const card = document.createElement("div");
+        card.className = "project-type-card";
+        card.innerHTML = `
+            <span class="project-type-icon">${type.icon}</span>
+            <div class="project-type-name">${type.name}</div>
+            <div class="project-type-desc">${type.description}</div>
+        `;
+        card.onclick = () => {
+            handleProjectTypeSelection(type);
+            modalOverlay.remove();
+        };
+        projectGrid.appendChild(card);
+    });
+    
+    modalBody.appendChild(projectGrid);
+    modalContent.appendChild(modalHeader);
+    modalContent.appendChild(modalBody);
+    modalOverlay.appendChild(modalContent);
+    
+    // Close modal on overlay click
+    modalOverlay.onclick = (e) => {
+        if (e.target === modalOverlay) {
+            modalOverlay.remove();
+        }
+    };
+    
+    // Add to body
+    document.body.appendChild(modalOverlay);
+    
+    // Add escape key listener
+    document.addEventListener("keydown", function escapeHandler(e) {
+        if (e.key === "Escape") {
+            modalOverlay.remove();
+            document.removeEventListener("keydown", escapeHandler);
+        }
+    });
+}
+
+function showFrameworkModal(frameworks, projectType) {
+    // Remove any existing modal
+    const existingModal = document.getElementById("framework-modal");
+    if (existingModal) {
+        existingModal.remove();
+    }
+
+    // Create modal overlay
+    const modalOverlay = document.createElement("div");
+    modalOverlay.className = "modal-overlay";
+    modalOverlay.id = "framework-modal";
+    
+    // Create modal content
+    const modalContent = document.createElement("div");
+    modalContent.className = "modal-content";
+    
+    // Create modal header
+    const modalHeader = document.createElement("div");
+    modalHeader.className = "modal-header";
+    
+    const modalTitle = document.createElement("h2");
+    modalTitle.className = "modal-title";
+    modalTitle.textContent = `✨ Choose Framework for ${projectType}`;
+    
+    const closeBtn = document.createElement("button");
+    closeBtn.className = "modal-close";
+    closeBtn.innerHTML = "✕";
+    closeBtn.onclick = () => modalOverlay.remove();
+    
+    modalHeader.appendChild(modalTitle);
+    modalHeader.appendChild(closeBtn);
+    
+    // Create modal body
+    const modalBody = document.createElement("div");
+    modalBody.className = "modal-body";
+    
+    const frameworkGrid = document.createElement("div");
+    frameworkGrid.className = "framework-grid";
+    
+    // Add frameworks
+    frameworks.forEach(framework => {
+        const option = document.createElement("div");
+        option.className = "framework-option";
+        option.textContent = framework;
+        option.onclick = () => {
+            handleFrameworkSelection(framework);
+            modalOverlay.remove();
+        };
+        frameworkGrid.appendChild(option);
+    });
+    
+    modalBody.appendChild(frameworkGrid);
+    modalContent.appendChild(modalHeader);
+    modalContent.appendChild(modalBody);
+    modalOverlay.appendChild(modalContent);
+    
+    // Close modal on overlay click
+    modalOverlay.onclick = (e) => {
+        if (e.target === modalOverlay) {
+            modalOverlay.remove();
+        }
+    };
+    
+    // Add to body
+    document.body.appendChild(modalOverlay);
+    
+    // Add escape key listener
+    document.addEventListener("keydown", function escapeHandler(e) {
+        if (e.key === "Escape") {
+            modalOverlay.remove();
+            document.removeEventListener("keydown", escapeHandler);
+        }
+    });
+}
+
+function handleProjectTypeSelection(type) {
+    currentTask.projectType = type.id;
+    currentTask.projectTypeName = type.name;
+    updateTaskStatus();
+    
+    addMessage("You", `Selected: ${type.name}`, "user");
+    addMessage("CrackerBot", `✨ Excellent choice! ${type.name} it is!`, "bot");
+    
+    // Show framework options if available
+    const fileTypes = CRACKERBOT_CONFIG.fileTypes[type.id];
+    if (fileTypes && fileTypes.length > 0) {
+        setTimeout(() => {
+            addMessage("CrackerBot", `Now, let's choose your framework/style...`, "bot");
+            showFrameworkModal(fileTypes, type.name);
+        }, 500);
+    } else {
+        setTimeout(() => {
+            promptForFeatures();
+        }, 500);
+    }
+}
+
+function handleFrameworkSelection(framework) {
+    currentTask.framework = framework;
+    updateTaskStatus();
+    
+    addMessage("You", `Framework: ${framework}`, "user");
+    addMessage("CrackerBot", `🔧 Perfect! ${framework} is a stellar choice!`, "bot");
+    
+    setTimeout(() => {
+        promptForFeatures();
+    }, 500);
+}
+
+// Export functions to global scope
+window.showProjectTypesModal = showProjectTypesModal;
+window.showFrameworkModal = showFrameworkModal;
+window.handleProjectTypeSelection = handleProjectTypeSelection;
+window.handleFrameworkSelection = handleFrameworkSelection;
+
+// Fix to ensure input is enabled after selecting project type
+const originalHandleProjectTypeSelection = window.handleProjectTypeSelection;
+window.handleProjectTypeSelection = function(type) {
+    currentTask.projectType = type.id;
+    currentTask.projectTypeName = type.name;
+    updateTaskStatus();
+    
+    addMessage("You", `Selected: ${type.name}`, "user");
+    addMessage("CrackerBot", `✨ Excellent choice! ${type.name} it is!`, "bot");
+    
+    // Show framework options if available
+    const fileTypes = CRACKERBOT_CONFIG.fileTypes[type.id];
+    if (fileTypes && fileTypes.length > 0) {
+        setTimeout(() => {
+            addMessage("CrackerBot", `Now, let's choose your framework/style...`, "bot");
+            showFrameworkModal(fileTypes, type.name);
+        }, 500);
+    } else {
+        setTimeout(() => {
+            promptForFeatures();
+        }, 500);
+    }
+};
+
+// Fix framework selection to enable input
+const originalHandleFrameworkSelection = window.handleFrameworkSelection;
+window.handleFrameworkSelection = function(framework) {
+    currentTask.framework = framework;
+    updateTaskStatus();
+    
+    addMessage("You", `Framework: ${framework}`, "user");
+    addMessage("CrackerBot", `🔧 Perfect! ${framework} is a stellar choice!`, "bot");
+    
+    setTimeout(() => {
+        promptForFeatures();
+        // Ensure input is enabled after framework selection
+        const input = document.getElementById("input");
+        input.disabled = false;
+        input.focus();
+    }, 500);
+};
