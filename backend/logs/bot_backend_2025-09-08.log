@@ -1,0 +1,204 @@
+[2025-09-08T06:23:15.677Z] INFO 🌟: 🌌 fileGenerator.js v2025-07-26-01 ignited—ready to forge cosmic files!
+[2025-09-08T06:23:15.678Z] [object Object] 🌟: Starting taskExecution.js initialization
+[2025-09-08T06:23:15.678Z] INFO 🌟: bot_backend attempting connection #1/10 to ws://websocket_server:5002
+[2025-09-08T06:23:15.678Z] INFO 🌟: 🌌 bot_backend socket.js v2025-07-26-01 igniting...
+[2025-09-08T06:23:15.678Z] DEBUG 🔍: Starting connection attempt #1
+[2025-09-08T06:23:16.206Z] ERROR 💥: bot_backend connection failed: websocket error
+Error: bot_backend connection failed: websocket error
+    at error (file:///home/crackerbot/backend/src/logger.js:151:15)
+    at Socket.<anonymous> (file:///home/crackerbot/backend/src/socket.js:108:15)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket.onerror (file:///home/crackerbot/backend/node_modules/socket.io-client/build/esm-debug/socket.js:451:18)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket.onError (file:///home/crackerbot/backend/node_modules/socket.io-client/build/esm-debug/manager.js:129:18)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket._onError (file:///home/crackerbot/backend/node_modules/engine.io-client/build/esm-debug/socket.js:513:14)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at WS.onError (file:///home/crackerbot/backend/node_modules/engine.io-client/build/esm-debug/transport.js:41:15)
+[2025-09-08T06:23:16.207Z] DEBUG 🔍: Retrying connection in 2000ms, attempt 2/10
+[2025-09-08T06:23:18.209Z] INFO 🌟: bot_backend attempting connection #2/10 to ws://websocket_server:5002
+[2025-09-08T06:23:18.210Z] DEBUG 🔍: Starting connection attempt #2
+[2025-09-08T06:23:18.713Z] ERROR 💥: bot_backend connection failed: websocket error
+Error: bot_backend connection failed: websocket error
+    at error (file:///home/crackerbot/backend/src/logger.js:151:15)
+    at Socket.<anonymous> (file:///home/crackerbot/backend/src/socket.js:108:15)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket.onerror (file:///home/crackerbot/backend/node_modules/socket.io-client/build/esm-debug/socket.js:451:18)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket.onError (file:///home/crackerbot/backend/node_modules/socket.io-client/build/esm-debug/manager.js:129:18)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket._onError (file:///home/crackerbot/backend/node_modules/engine.io-client/build/esm-debug/socket.js:513:14)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at WS.onError (file:///home/crackerbot/backend/node_modules/engine.io-client/build/esm-debug/transport.js:41:15)
+[2025-09-08T06:23:18.714Z] DEBUG 🔍: Retrying connection in 4000ms, attempt 3/10
+[2025-09-08T06:23:22.716Z] INFO 🌟: bot_backend attempting connection #3/10 to ws://websocket_server:5002
+[2025-09-08T06:23:22.717Z] DEBUG 🔍: Starting connection attempt #3
+[2025-09-08T06:23:23.220Z] ERROR 💥: bot_backend connection failed: websocket error
+Error: bot_backend connection failed: websocket error
+    at error (file:///home/crackerbot/backend/src/logger.js:151:15)
+    at Socket.<anonymous> (file:///home/crackerbot/backend/src/socket.js:108:15)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket.onerror (file:///home/crackerbot/backend/node_modules/socket.io-client/build/esm-debug/socket.js:451:18)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket.onError (file:///home/crackerbot/backend/node_modules/socket.io-client/build/esm-debug/manager.js:129:18)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket._onError (file:///home/crackerbot/backend/node_modules/engine.io-client/build/esm-debug/socket.js:513:14)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at WS.onError (file:///home/crackerbot/backend/node_modules/engine.io-client/build/esm-debug/transport.js:41:15)
+[2025-09-08T06:23:23.220Z] DEBUG 🔍: Retrying connection in 8000ms, attempt 4/10
+[2025-09-08T06:23:31.221Z] INFO 🌟: bot_backend attempting connection #4/10 to ws://websocket_server:5002
+[2025-09-08T06:23:31.221Z] DEBUG 🔍: Starting connection attempt #4
+[2025-09-08T06:23:31.725Z] ERROR 💥: bot_backend connection failed: websocket error
+Error: bot_backend connection failed: websocket error
+    at error (file:///home/crackerbot/backend/src/logger.js:151:15)
+    at Socket.<anonymous> (file:///home/crackerbot/backend/src/socket.js:108:15)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket.onerror (file:///home/crackerbot/backend/node_modules/socket.io-client/build/esm-debug/socket.js:451:18)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket.onError (file:///home/crackerbot/backend/node_modules/socket.io-client/build/esm-debug/manager.js:129:18)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket._onError (file:///home/crackerbot/backend/node_modules/engine.io-client/build/esm-debug/socket.js:513:14)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at WS.onError (file:///home/crackerbot/backend/node_modules/engine.io-client/build/esm-debug/transport.js:41:15)
+[2025-09-08T06:23:31.726Z] DEBUG 🔍: Retrying connection in 16000ms, attempt 5/10
+[2025-09-08T06:23:47.728Z] INFO 🌟: bot_backend attempting connection #5/10 to ws://websocket_server:5002
+[2025-09-08T06:23:47.728Z] DEBUG 🔍: Starting connection attempt #5
+[2025-09-08T06:23:48.231Z] ERROR 💥: bot_backend connection failed: websocket error
+Error: bot_backend connection failed: websocket error
+    at error (file:///home/crackerbot/backend/src/logger.js:151:15)
+    at Socket.<anonymous> (file:///home/crackerbot/backend/src/socket.js:108:15)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket.onerror (file:///home/crackerbot/backend/node_modules/socket.io-client/build/esm-debug/socket.js:451:18)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket.onError (file:///home/crackerbot/backend/node_modules/socket.io-client/build/esm-debug/manager.js:129:18)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket._onError (file:///home/crackerbot/backend/node_modules/engine.io-client/build/esm-debug/socket.js:513:14)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at WS.onError (file:///home/crackerbot/backend/node_modules/engine.io-client/build/esm-debug/transport.js:41:15)
+[2025-09-08T06:23:48.232Z] DEBUG 🔍: Retrying connection in 32000ms, attempt 6/10
+[2025-09-08T06:24:20.237Z] INFO 🌟: bot_backend attempting connection #6/10 to ws://websocket_server:5002
+[2025-09-08T06:24:20.237Z] DEBUG 🔍: Starting connection attempt #6
+[2025-09-08T06:24:20.740Z] ERROR 💥: bot_backend connection failed: websocket error
+Error: bot_backend connection failed: websocket error
+    at error (file:///home/crackerbot/backend/src/logger.js:151:15)
+    at Socket.<anonymous> (file:///home/crackerbot/backend/src/socket.js:108:15)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket.onerror (file:///home/crackerbot/backend/node_modules/socket.io-client/build/esm-debug/socket.js:451:18)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket.onError (file:///home/crackerbot/backend/node_modules/socket.io-client/build/esm-debug/manager.js:129:18)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket._onError (file:///home/crackerbot/backend/node_modules/engine.io-client/build/esm-debug/socket.js:513:14)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at WS.onError (file:///home/crackerbot/backend/node_modules/engine.io-client/build/esm-debug/transport.js:41:15)
+[2025-09-08T06:24:20.740Z] DEBUG 🔍: Retrying connection in 64000ms, attempt 7/10
+[2025-09-08T06:24:46.697Z] INFO 🌟: 🌌 fileGenerator.js v2025-07-26-01 ignited—ready to forge cosmic files!
+[2025-09-08T06:24:46.698Z] [object Object] 🌟: Starting taskExecution.js initialization
+[2025-09-08T06:24:46.698Z] INFO 🌟: bot_backend attempting connection #1/10 to # ws://websocket_server:5002 # DISABLED
+[2025-09-08T06:24:46.698Z] INFO 🌟: 🌌 bot_backend socket.js v2025-07-26-01 igniting...
+[2025-09-08T06:24:46.698Z] DEBUG 🔍: Starting connection attempt #1
+[2025-09-08T06:24:46.765Z] ERROR 💥: bot_backend connection failed: websocket error
+Error: bot_backend connection failed: websocket error
+    at error (file:///home/crackerbot/backend/src/logger.js:151:15)
+    at Socket.<anonymous> (file:///home/crackerbot/backend/src/socket.js:108:15)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket.onerror (file:///home/crackerbot/backend/node_modules/socket.io-client/build/esm-debug/socket.js:451:18)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket.onError (file:///home/crackerbot/backend/node_modules/socket.io-client/build/esm-debug/manager.js:129:18)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket._onError (file:///home/crackerbot/backend/node_modules/engine.io-client/build/esm-debug/socket.js:513:14)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at WS.onError (file:///home/crackerbot/backend/node_modules/engine.io-client/build/esm-debug/transport.js:41:15)
+[2025-09-08T06:24:46.766Z] DEBUG 🔍: Retrying connection in 2000ms, attempt 2/10
+[2025-09-08T06:24:48.767Z] INFO 🌟: bot_backend attempting connection #2/10 to # ws://websocket_server:5002 # DISABLED
+[2025-09-08T06:24:48.768Z] DEBUG 🔍: Starting connection attempt #2
+[2025-09-08T06:24:48.774Z] ERROR 💥: bot_backend connection failed: websocket error
+Error: bot_backend connection failed: websocket error
+    at error (file:///home/crackerbot/backend/src/logger.js:151:15)
+    at Socket.<anonymous> (file:///home/crackerbot/backend/src/socket.js:108:15)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket.onerror (file:///home/crackerbot/backend/node_modules/socket.io-client/build/esm-debug/socket.js:451:18)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket.onError (file:///home/crackerbot/backend/node_modules/socket.io-client/build/esm-debug/manager.js:129:18)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket._onError (file:///home/crackerbot/backend/node_modules/engine.io-client/build/esm-debug/socket.js:513:14)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at WS.onError (file:///home/crackerbot/backend/node_modules/engine.io-client/build/esm-debug/transport.js:41:15)
+[2025-09-08T06:24:48.774Z] DEBUG 🔍: Retrying connection in 4000ms, attempt 3/10
+[2025-09-08T06:24:52.775Z] INFO 🌟: bot_backend attempting connection #3/10 to # ws://websocket_server:5002 # DISABLED
+[2025-09-08T06:24:52.775Z] DEBUG 🔍: Starting connection attempt #3
+[2025-09-08T06:24:52.790Z] ERROR 💥: bot_backend connection failed: websocket error
+Error: bot_backend connection failed: websocket error
+    at error (file:///home/crackerbot/backend/src/logger.js:151:15)
+    at Socket.<anonymous> (file:///home/crackerbot/backend/src/socket.js:108:15)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket.onerror (file:///home/crackerbot/backend/node_modules/socket.io-client/build/esm-debug/socket.js:451:18)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket.onError (file:///home/crackerbot/backend/node_modules/socket.io-client/build/esm-debug/manager.js:129:18)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket._onError (file:///home/crackerbot/backend/node_modules/engine.io-client/build/esm-debug/socket.js:513:14)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at WS.onError (file:///home/crackerbot/backend/node_modules/engine.io-client/build/esm-debug/transport.js:41:15)
+[2025-09-08T06:24:52.790Z] DEBUG 🔍: Retrying connection in 8000ms, attempt 4/10
+[2025-09-08T06:25:00.795Z] INFO 🌟: bot_backend attempting connection #4/10 to # ws://websocket_server:5002 # DISABLED
+[2025-09-08T06:25:00.795Z] DEBUG 🔍: Starting connection attempt #4
+[2025-09-08T06:25:00.803Z] ERROR 💥: bot_backend connection failed: websocket error
+Error: bot_backend connection failed: websocket error
+    at error (file:///home/crackerbot/backend/src/logger.js:151:15)
+    at Socket.<anonymous> (file:///home/crackerbot/backend/src/socket.js:108:15)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket.onerror (file:///home/crackerbot/backend/node_modules/socket.io-client/build/esm-debug/socket.js:451:18)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket.onError (file:///home/crackerbot/backend/node_modules/socket.io-client/build/esm-debug/manager.js:129:18)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket._onError (file:///home/crackerbot/backend/node_modules/engine.io-client/build/esm-debug/socket.js:513:14)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at WS.onError (file:///home/crackerbot/backend/node_modules/engine.io-client/build/esm-debug/transport.js:41:15)
+[2025-09-08T06:25:00.803Z] DEBUG 🔍: Retrying connection in 16000ms, attempt 5/10
+[2025-09-08T06:25:16.804Z] INFO 🌟: bot_backend attempting connection #5/10 to # ws://websocket_server:5002 # DISABLED
+[2025-09-08T06:25:16.804Z] DEBUG 🔍: Starting connection attempt #5
+[2025-09-08T06:25:16.812Z] ERROR 💥: bot_backend connection failed: websocket error
+Error: bot_backend connection failed: websocket error
+    at error (file:///home/crackerbot/backend/src/logger.js:151:15)
+    at Socket.<anonymous> (file:///home/crackerbot/backend/src/socket.js:108:15)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket.onerror (file:///home/crackerbot/backend/node_modules/socket.io-client/build/esm-debug/socket.js:451:18)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket.onError (file:///home/crackerbot/backend/node_modules/socket.io-client/build/esm-debug/manager.js:129:18)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket._onError (file:///home/crackerbot/backend/node_modules/engine.io-client/build/esm-debug/socket.js:513:14)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at WS.onError (file:///home/crackerbot/backend/node_modules/engine.io-client/build/esm-debug/transport.js:41:15)
+[2025-09-08T06:25:16.812Z] DEBUG 🔍: Retrying connection in 32000ms, attempt 6/10
+[2025-09-08T06:25:48.814Z] INFO 🌟: bot_backend attempting connection #6/10 to # ws://websocket_server:5002 # DISABLED
+[2025-09-08T06:25:48.814Z] DEBUG 🔍: Starting connection attempt #6
+[2025-09-08T06:25:48.820Z] ERROR 💥: bot_backend connection failed: websocket error
+Error: bot_backend connection failed: websocket error
+    at error (file:///home/crackerbot/backend/src/logger.js:151:15)
+    at Socket.<anonymous> (file:///home/crackerbot/backend/src/socket.js:108:15)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket.onerror (file:///home/crackerbot/backend/node_modules/socket.io-client/build/esm-debug/socket.js:451:18)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket.onError (file:///home/crackerbot/backend/node_modules/socket.io-client/build/esm-debug/manager.js:129:18)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at Socket._onError (file:///home/crackerbot/backend/node_modules/engine.io-client/build/esm-debug/socket.js:513:14)
+    at Emitter.emit (/home/crackerbot/backend/node_modules/@socket.io/component-emitter/lib/cjs/index.js:143:20)
+    at WS.onError (file:///home/crackerbot/backend/node_modules/engine.io-client/build/esm-debug/transport.js:41:15)
+[2025-09-08T06:25:48.820Z] DEBUG 🔍: Retrying connection in 64000ms, attempt 7/10
+[2025-09-08T06:31:13.850Z] INFO 🌟: 🌌 bot_backend socket.js v2025-09-08 initialized (local mode)
+[2025-09-08T06:31:13.850Z] INFO 🌟: 🌌 Socket module ready - using main app socket references
+[2025-09-08T06:38:03.086Z] INFO 🌟: 🌌 bot_backend socket.js v2025-09-08 initialized (local mode)
+[2025-09-08T06:38:03.087Z] INFO 🌟: 🌌 Socket module ready - using main app socket references
+[2025-09-08T06:40:33.141Z] INFO 🌟: 🌌 bot_backend socket.js v2025-09-08 initialized (local mode)
+[2025-09-08T06:40:33.143Z] INFO 🌟: 🌌 Socket module ready - using main app socket references
+[2025-09-08T06:41:48.411Z] INFO 🌟: 🌌 bot_backend socket.js v2025-09-08 initialized (local mode)
+[2025-09-08T06:41:48.412Z] INFO 🌟: 🌌 Socket module ready - using main app socket references
+[2025-09-08T06:45:44.485Z] INFO 🌟: 🌌 bot_backend socket.js v2025-09-08 initialized (local mode)
+[2025-09-08T06:45:44.487Z] INFO 🌟: 🌌 Socket module ready - using main app socket references
+[2025-09-08T06:47:32.172Z] INFO 🌟: 🌌 bot_backend socket.js v2025-09-08 initialized (local mode)
+[2025-09-08T06:47:32.174Z] INFO 🌟: 🌌 Socket module ready - using main app socket references
+[2025-09-08T06:51:54.150Z] INFO 🌟: 🌌 bot_backend socket.js v2025-09-08 initialized (local mode)
+[2025-09-08T06:51:54.153Z] INFO 🌟: 🌌 Socket module ready - using main app socket references
+[2025-09-08T06:52:18.384Z] INFO 🌟: 🌌 bot_backend socket.js v2025-09-08 initialized (local mode)
+[2025-09-08T06:52:18.385Z] INFO 🌟: 🌌 Socket module ready - using main app socket references
+[2025-09-08T07:05:24.253Z] INFO 🌟: 🌌 bot_backend socket.js v2025-09-08 initialized (local mode)
+[2025-09-08T07:05:24.254Z] INFO 🌟: 🌌 Socket module ready - using main app socket references
