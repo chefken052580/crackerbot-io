@@ -739,6 +739,12 @@ function showProjectTypes() {
 function startBuilding() {
     console.log("🚀 [Main] Starting build");
     
+    // ✅ GUARD: Prevent double-firing via _aiGenerationInProgress flag
+    if (window._aiGenerationInProgress) {
+        console.log("⚠️ [Main] Build already in progress, skipping duplicate");
+        return;
+    }
+    
     // ✅ FIX: Reset progress tracking
     window.currentBuildProgress = 0;
     window.backendProgressReceived = false;
@@ -756,43 +762,15 @@ function startBuilding() {
     
     addMessage("CrackerBot", '🌌 Building "' + window.currentTask.projectName + '"...', "bot");
     
-    console.log("[Main] Opening live streaming preview...");
-    var taskData = {
-        taskId: window.currentTask.taskId,
-        projectName: window.currentTask.projectName,
-        projectType: window.currentTask.projectType || 'web',
-        projectTypeName: window.currentTask.projectTypeName || window.currentTask.projectType,
-        features: window.currentTask.features || 'No features specified',
-        frontendId: window.socket ? window.socket.id : 'no-socket'
+    // ✅ UNIFIED PIPELINE: Route through AI connector (same as chat flow)
+    const aiRequest = {
+        name: window.currentTask.projectName,
+        type: window.currentTask.projectType || 'web-app',
+        features: window.currentTask.features || 'No features specified'
     };
     
-    var attempts = 0;
-    var tryOpenPreview = function() {
-        attempts++;
-        console.log("[Main] Attempt " + attempts + " to open live preview");
-        
-        if (forceLivePreviewOpen(taskData)) {
-            console.log("[Main] ✅ Live preview opened successfully");
-        } else if (attempts < 3) {
-            console.log("[Main] Live preview failed, retrying in 1 second...");
-            setTimeout(tryOpenPreview, 1000);
-        } else {
-            console.log("[Main] ❌ Failed to open live preview after 3 attempts");
-            addMessage("System", "⚠️ Live preview unavailable, building will continue normally", "system");
-        }
-    };
-    
-    tryOpenPreview();
-    
-    if (window.buildProjectWithProgress && typeof window.buildProjectWithProgress === 'function') {
-        console.log("[Main] Triggering file generation via buildProjectWithProgress");
-        window.buildProjectWithProgress();
-    } else if (window.actuallyBuildProject && typeof window.actuallyBuildProject === 'function') {
-        console.log("[Main] Triggering file generation via actuallyBuildProject");
-        window.actuallyBuildProject();
-    } else {
-        console.log("[Main] No build function found, falling back to fake progress");
-    }
+    console.log("[Main] Routing build through triggerBackendAIGeneration");
+    window.triggerBackendAIGeneration(aiRequest);
     
     // ✅ FIX: Always start fake progress (will be overridden by backend)
     startFakeProgress();

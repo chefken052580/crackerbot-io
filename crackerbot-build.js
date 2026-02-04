@@ -705,43 +705,6 @@ Visit [CrackerBot](https://crackerbot.io) to create your own projects!`
     console.log('[Build Support] ✅ Enhanced build support functions ready');
     
 })();
-// ✅ FIX: Add the missing buildProjectWithProgress function
-window.buildProjectWithProgress = function() {
-    // Prevent duplicate builds
-    if (window._buildInProgress) {
-        console.log('[Build Support] Build already in progress, skipping duplicate');
-        return;
-    }
-    window._buildInProgress = true;
-    setTimeout(() => { window._buildInProgress = false; }, 10000);
-    
-    console.log('[Build Support] ✅ buildProjectWithProgress triggered');
-    
-    const task = window.currentTask;
-    if (!task || !task.projectName) {
-        console.error('[Build Support] No current task to build');
-        return;
-    }
-    
-    // Emit ai_generate_project to backend
-    // DISABLED - ai-connector.js already handles this emit
-    if (false && window.socket && window.socket.connected) {
-        console.log('[Build Support] Emitting ai_generate_project event');
-        window.socket.emit('ai_generate_project', {
-            name: task.projectName,
-            type: task.projectType || 'web-app',
-            features: task.features || task.projectName,
-            taskId: task.taskId
-        });
-    } else {
-        console.error('[Build Support] Socket not connected!');
-        if (window.addMessage) {
-            window.addMessage("System", "❌ Not connected to backend", "error");
-        }
-    }
-};
-
-// Alias for compatibility
-window.actuallyBuildProject = window.buildProjectWithProgress;
-
-console.log('[Build Support] ✅ buildProjectWithProgress function added');
+// ✅ REMOVED: buildProjectWithProgress v2 (was dead code)
+// All builds now route through triggerBackendAIGeneration() in crackerbot-ai-connector.js
+// This provides the single, unified build pipeline

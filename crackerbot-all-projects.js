@@ -160,7 +160,13 @@ window.handleProjectInput = function(text) {
         case "features":
             currentTask.features = text;
             setTaskPending(null);
-            buildProjectWithProgress();
+            // Route through AI connector (same pipeline as chat)
+            const aiRequest = {
+                name: currentTask.projectName,
+                type: currentTask.projectType,
+                features: currentTask.features
+            };
+            window.triggerBackendAIGeneration(aiRequest);
             break;
     }
 };
@@ -203,62 +209,9 @@ window.buildProjectWithProgress = async function() {
         await new Promise(r => setTimeout(r, 300));
     }
     
-    try {
-        const requestData = {
-            projectName: currentTask.projectName,
-            projectType: projectType,
-            features: currentTask.features
-        };
-        
-        console.log("Calling Claude with:", requestData);
-        updateProgress(35, "Claude is thinking...");
-        
-        const response = await fetch("https://crackerbot.io/api/generate-project", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(requestData)
-        });
-        
-        updateProgress(50, "Generating architecture...");
-        await new Promise(r => setTimeout(r, 500));
-        
-        updateProgress(65, "Writing code...");
-        
-        const files = await response.json();
-        console.log("✅ Generated files:", Object.keys(files));
-        
-        currentTask.files = files;
-        
-        updateProgress(80, "Adding features...");
-        await new Promise(r => setTimeout(r, 500));
-        
-        updateProgress(90, "Finalizing project...");
-        await new Promise(r => setTimeout(r, 500));
-        
-        updateProgress(100, "Complete!");
-        
-        if (window.addMessage) {
-            const fileCount = Object.keys(files).length;
-            addMessage("Claude", `✅ ${projectInfo.display} "${currentTask.projectName}" created with ${fileCount} files!`, "bot");
-        }
-        
-        // Send files to live editor after build completion
-        console.log("[All-Projects] Build completed, sending files to live editor...");
-        setTimeout(() => sendFilesToLiveEditor(currentTask.files), 500);
-        
-    } catch (error) {
-        console.error("Build error:", error);
-        
-        updateProgress(70, "Using template fallback...");
-        currentTask.files = generateCompleteFallback(currentTask);
-        
-        await new Promise(r => setTimeout(r, 500));
-        updateProgress(100, "Complete (template)!");
-        
-        // Send fallback files to live editor
-        console.log("[All-Projects] Fallback build completed, sending files to live editor...");
-        setTimeout(() => sendFilesToLiveEditor(currentTask.files), 500);
-    }
+    // ✅ NOTE: Actual build is now handled by triggerBackendAIGeneration()
+    // This function shows the progress UI only
+    console.log("[All-Projects] Build triggered via AI connector pipeline");
 };
 
 // Generate complete fallback files for ALL types
