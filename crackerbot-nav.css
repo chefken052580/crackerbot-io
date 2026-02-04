@@ -1,0 +1,66 @@
+/* CRACKERBOT NAV BAR */
+.app-container { grid-template-columns: 60px 1fr !important; }
+.token-scanner-panel { display: none !important; }
+.wallets-panel { display: none !important; }
+.nav-sidebar {
+    background: rgba(16,20,40,0.95);
+    border-right: 1px solid rgba(0,255,136,0.2);
+    display: flex; flex-direction: column; align-items: center;
+    padding: 10px 0; gap: 4px; z-index: 100;
+    position: relative; overflow-y: auto; overflow-x: hidden; height: 100vh;
+}
+.nav-sidebar::after {
+    content: ""; position: absolute; top: 0; right: 0; width: 1px; height: 100%;
+    background: linear-gradient(180deg, transparent, rgba(0,255,136,0.4), transparent);
+    pointer-events: none;
+}
+.nav-icon {
+    width: 42px; height: 42px; border-radius: 10px; border: none;
+    background: transparent; color: rgba(255,255,255,0.45); font-size: 20px;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s ease; position: relative; flex-shrink: 0; padding: 0;
+}
+.nav-icon:hover { background: rgba(0,255,136,0.1); color: #00ff88; transform: scale(1.05); }
+.nav-icon.active { background: rgba(0,255,136,0.15); color: #00ff88; box-shadow: 0 0 12px rgba(0,255,136,0.15); }
+.nav-icon.active::before {
+    content: ""; position: absolute; left: -8px; top: 50%; transform: translateY(-50%);
+    width: 3px; height: 22px; background: #00ff88; border-radius: 0 3px 3px 0;
+    box-shadow: 0 0 8px rgba(0,255,136,0.5);
+}
+.nav-icon img { width: 26px; height: 26px; border-radius: 6px; object-fit: cover; }
+.nav-icon[data-tooltip]:hover::after {
+    content: attr(data-tooltip); position: absolute; left: 52px; top: 50%;
+    transform: translateY(-50%); background: rgba(10,14,27,0.95); color: #00ff88;
+    padding: 5px 10px; border-radius: 5px; font-size: 11px; white-space: nowrap;
+    border: 1px solid rgba(0,255,136,0.3); z-index: 9999; pointer-events: none;
+    font-family: "Courier New", monospace; letter-spacing: 0.5px;
+}
+.nav-divider { width: 30px; height: 1px; background: rgba(0,255,136,0.2); margin: 4px 0; flex-shrink: 0; }
+.app-view {
+    display: none; width: 100%; height: 100vh; overflow-y: auto; padding: 40px;
+    color: #e0e0e0; font-family: "Courier New", monospace;
+    background: rgba(26,31,58,0.85); position: relative;
+}
+.app-view::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    border: 2px solid transparent;
+    border-image: linear-gradient(45deg, #00ff88, #00ccff, #8a2be2, #ff00ff) 1;
+    pointer-events: none;
+}
+.app-view.active { display: flex; flex-direction: column; }
+.app-view h2 { font-size: 22px; color: #00ff88; margin-bottom: 6px; text-shadow: 0 0 10px rgba(0,255,136,0.3); }
+.app-view .app-desc { color: rgba(255,255,255,0.4); font-size: 13px; margin-bottom: 30px; }
+.app-coming-soon { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 16px; opacity: 0.5; }
+.app-coming-soon .icon { font-size: 52px; }
+.app-coming-soon .title { font-size: 15px; color: #00ff88; text-transform: uppercase; letter-spacing: 3px; }
+.app-coming-soon .sub { font-size: 12px; color: rgba(255,255,255,0.35); }
+.nav-token-ticker {
+    margin-top: auto; width: 100%; padding: 6px 2px;
+    display: flex; flex-direction: column; gap: 2px;
+    border-top: 1px solid rgba(0,255,136,0.15);
+}
+.nav-ticker-item { text-align: center; font-size: 11px; color: rgba(255,255,255,0.35); line-height: 1.2; padding: 2px 0; font-family: "Courier New", monospace; }
+.nav-ticker-item .sym { display: block; color: rgba(0,255,136,0.5); font-weight: bold; font-size: 12px; }
+.nav-ticker-item .price { display: block; }
+.nav-ticker-item .price.up { color: #00ff88; }
+.nav-ticker-item .price.down { color: #ff4444; }
