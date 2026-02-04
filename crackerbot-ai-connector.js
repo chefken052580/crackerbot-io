@@ -215,16 +215,7 @@
             updateProgressUI(data.percent, data.status);
         });
         
-        // Listen for project generation completion
-        window.socket.on('project_generated', (data) => {
-            console.log("🎉 AI Connector: Project generated!", data);
-            
-            if (data && data.files) {
-                handleProjectGenerated(data);
-            } else {
-                handleAIError("Invalid project data received");
-            }
-        });
+        // REMOVED: project_generated listener now handled by crackerbot-main.js (single source of truth)
         
         // Listen for AI errors
         window.socket.on('error', (data) => {

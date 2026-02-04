@@ -35,13 +35,7 @@ if (typeof io !== 'undefined') {
         console.error('Socket.io error:', error);
     });
     
-    // Listen for AI responses
-    window.socket.on('project_generated', (data) => {
-        console.log('📦 Project generated:', data);
-        if (window.handleProjectGenerated) {
-            window.handleProjectGenerated(data);
-        }
-    });
+    // REMOVED: project_generated listener now handled by crackerbot-main.js (single source of truth)
     
     window.socket.on('code_modified', (data) => {
         console.log('✏️ Code modified:', data);
