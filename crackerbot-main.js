@@ -444,7 +444,9 @@ function sendMessage() {
             window.currentTask.features = text;
             updateTaskStatus();
             setTaskPending(null);
-            startBuilding();
+            // ✅ FIX: Don't call startBuilding() here - the AI path is now the only build trigger
+            // This prevents the triple-build issue (manual setup + AI request + old progress loop)
+            addMessage("CrackerBot", "🚀 Ready to build! Your project \"" + window.currentTask.projectName + "\" is all set. Type something like 'build me this website' to start!", "bot");
         } else if (window.taskPending.step === "post-build") {
             // NEW: Handle post-build options
             console.log("📋 [Main] Handling post-build option:", text);
